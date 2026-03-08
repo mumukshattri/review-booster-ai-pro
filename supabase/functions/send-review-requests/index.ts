@@ -92,10 +92,8 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const businessName = profile.business_name || "our business";
     const reviewUrl = profile.direct_review_url || profile.review_url;
+    console.log("Review URL:", reviewUrl);
     const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open`;
-
-    // Feedback page URL for sentiment filtering
-    const appUrl = Deno.env.get("APP_URL") || "https://id-preview--d23d881d-4508-446b-a2fe-10f9fb977280.lovable.app";
 
     const results = [];
 
