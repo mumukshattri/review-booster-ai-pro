@@ -262,13 +262,22 @@ export default function Dashboard() {
                 <TabsContent value="customers" className="mt-4">
                   <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
                 </TabsContent>
-            </TabsContent>
-            {config.hasFeedback ? (
-              <TabsContent value="feedback" className="mt-4">
-                <FeedbackInbox />
-              </TabsContent>
-            ) : null}
-          </Tabs>
+                {config.hasFeedback ? (
+                  <TabsContent value="feedback" className="mt-4">
+                    <FeedbackInbox />
+                  </TabsContent>
+                ) : null}
+              </Tabs>
+
+              {!config.hasFeedback && (
+                <UpgradePrompt
+                  title="Unlock Private Feedback"
+                  description="Upgrade to Pro to capture negative feedback privately before it becomes a public review."
+                  targetPlan="Pro"
+                />
+              )}
+            </>
+          )}
 
           {!config.hasFeedback && (
             <UpgradePrompt
