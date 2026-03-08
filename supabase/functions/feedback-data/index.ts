@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { customerId, action, message } = body;
+    const { customerId, action, message, reviewed } = body;
 
     if (!customerId) {
       return new Response(JSON.stringify({ error: "Missing customerId" }), {
@@ -26,6 +26,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Save review completion status
+    if (action === "reviewed") {
+      await supabase
+        .from("customers")
+        .update({ reviewed: reviewed === true })
+        .eq("id", customerId);
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Submit feedback
     if (action === "submit") {
