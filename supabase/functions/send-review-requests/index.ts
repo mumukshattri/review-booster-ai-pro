@@ -77,8 +77,8 @@ serve(async (req) => {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const businessName = profile.business_name || "our business";
@@ -86,33 +86,31 @@ serve(async (req) => {
     const results = [];
 
     for (const customer of customers) {
-      // Generate personalized message via Lovable AI
+      // Generate personalized message via Anthropic Claude
       let personalizedMessage = "";
       try {
-        const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
             "Content-Type": "application/json",
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
+            model: "claude-haiku-20240307",
+            max_tokens: 150,
             messages: [
               {
-                role: "system",
-                content: `You write short, warm, human-sounding email bodies asking customers to leave a Google review. Output ONLY the email body text (no subject, no greeting, no signature). Keep it under 3 sentences. Be genuine and grateful. The business is "${businessName}". The customer's name is provided.`,
-              },
-              {
                 role: "user",
-                content: `Write a review request email body for ${customer.name}.`,
+                content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Output ONLY the email body text, no subject line, no greeting, no signature.`,
               },
             ],
           }),
         });
 
-        if (aiResp.ok) {
-          const aiData = await aiResp.json();
-          personalizedMessage = aiData.choices?.[0]?.message?.content?.trim() || "";
+        if (anthropicResponse.ok) {
+          const aiData = await anthropicResponse.json();
+          personalizedMessage = aiData.content?.[0]?.text?.trim() || "";
         }
       } catch {
         // Fallback if AI fails
