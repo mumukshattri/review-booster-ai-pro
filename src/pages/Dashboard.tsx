@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Upload, Send, Users, Mail, MousePointerClick, Eye, Target, Loader2 } from "lucide-react";
+import { Upload, Send, Users, Mail, MousePointerClick, Eye, Target, Loader2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { motion, useReducedMotion } from "framer-motion";
