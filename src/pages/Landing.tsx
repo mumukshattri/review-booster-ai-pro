@@ -23,7 +23,7 @@ const steps = [
   {
     icon: Star,
     title: "Reviews Come In",
-    description: "Customers click through and leave Google reviews effortlessly.",
+    description: "Customers click one link and land directly on the Google review box — ready to rate in seconds. No searching, no clicking around.",
   },
 ];
 
@@ -132,7 +132,7 @@ export default function Landing() {
             transition={{ delay: 0.1, duration: dur * 2, ease }}
             className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 sm:mb-6 leading-relaxed px-2"
           >
-            Upload your customers, let AI craft personalized review requests, and watch your Google ratings soar — all hands-free.
+            Upload your customers, let AI send personalized requests, and customers land directly on the Google review box — ready to rate in seconds.
           </motion.p>
 
           {/* Live counter */}
@@ -359,7 +359,7 @@ export default function Landing() {
         <section className="container mx-auto px-4 pb-16 sm:pb-28 relative z-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Zap, title: "Lightning Fast", desc: "Send thousands of review requests in minutes, not hours." },
+              { icon: Zap, title: "Zero Friction Reviews", desc: "Customers click one link and land directly on the review box. No searching, no clicking around — just stars and submit." },
               { icon: TrendingUp, title: "Analytics", desc: "Track opens, clicks, and reviews in real-time." },
               { icon: Shield, title: "Secure & Private", desc: "Enterprise-grade security for your customer data." },
             ].map((f, i) => (
