@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Upload, Sparkles, Star, Check, ArrowRight, Zap, TrendingUp, Shield, Menu, X } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { motion, useReducedMotion } from "framer-motion";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { CountUp } from "@/components/CountUp";
