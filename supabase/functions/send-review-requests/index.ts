@@ -78,6 +78,8 @@ Deno.serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const businessName = profile.business_name || "our business";
+    const emailReviewUrl = profile.direct_review_url || profile.review_url;
+    console.log("Review URL:", emailReviewUrl);
 
     const results = [];
 
