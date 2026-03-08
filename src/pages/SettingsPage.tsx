@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, Upload, X } from "lucide-react";
+import { Save, Upload, X, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PageTransition } from "@/components/PageTransition";
@@ -42,7 +42,6 @@ export default function SettingsPage() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
       toast({ title: "Please upload an image file", variant: "destructive" });
       return;
@@ -51,30 +50,21 @@ export default function SettingsPage() {
       toast({ title: "Image must be under 2MB", variant: "destructive" });
       return;
     }
-
     setUploading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     const ext = file.name.split(".").pop();
     const filePath = `${user.id}/logo.${ext}`;
-
     const { error: uploadError } = await supabase.storage
       .from("business-logos")
       .upload(filePath, file, { upsert: true });
-
     if (uploadError) {
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
       setUploading(false);
       return;
     }
-
-    const { data: urlData } = supabase.storage
-      .from("business-logos")
-      .getPublicUrl(filePath);
-
+    const { data: urlData } = supabase.storage.from("business-logos").getPublicUrl(filePath);
     const publicUrl = urlData.publicUrl;
-    
     await supabase.from("profiles").update({ logo_url: publicUrl } as any).eq("id", user.id);
     setLogoUrl(publicUrl);
     setUploading(false);
@@ -84,8 +74,6 @@ export default function SettingsPage() {
   const handleRemoveLogo = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    // Remove from storage (best effort)
     await supabase.storage.from("business-logos").remove([`${user.id}/logo.png`, `${user.id}/logo.jpg`, `${user.id}/logo.jpeg`, `${user.id}/logo.webp`]);
     await supabase.from("profiles").update({ logo_url: null } as any).eq("id", user.id);
     setLogoUrl(null);
@@ -119,6 +107,55 @@ export default function SettingsPage() {
             <p className="text-muted-foreground text-sm">Manage your business info and subscription</p>
           </div>
 
+          {/* Auto-Send Sequence Card - Prominent at top */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05, duration: 0.4 }}
+            className="glass-card p-6 border-primary/20"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
+                  autoSendEnabled ? "bg-primary/20" : "bg-secondary"
+                }`}>
+                  <Zap className={`w-6 h-6 transition-colors ${
+                    autoSendEnabled ? "text-primary" : "text-muted-foreground"
+                  }`} />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground">Auto-Send Sequence</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Automatically send a 3-email review request sequence when a customer is added
+                  </p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      autoSendEnabled
+                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                        : "bg-secondary text-muted-foreground border border-border/20"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        autoSendEnabled ? "bg-emerald-400" : "bg-muted-foreground/50"
+                      }`} />
+                      {autoSendEnabled ? "Active" : "Disabled"}
+                    </span>
+                    {autoSendEnabled && (
+                      <span className="text-xs text-muted-foreground">
+                        Email 1 → Day 0 · Email 2 → Day 3 · Email 3 → Day 7
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <Switch
+                checked={autoSendEnabled}
+                onCheckedChange={setAutoSendEnabled}
+                className="shrink-0 mt-1"
+              />
+            </div>
+          </motion.div>
+
+          {/* Business Information */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -133,11 +170,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-4">
                   {logoUrl ? (
                     <div className="relative">
-                      <img
-                        src={logoUrl}
-                        alt="Business logo"
-                        className="w-16 h-16 rounded-xl object-cover border border-border"
-                      />
+                      <img src={logoUrl} alt="Business logo" className="w-16 h-16 rounded-xl object-cover border border-border" />
                       <button
                         onClick={handleRemoveLogo}
                         className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-80 transition-opacity"
@@ -162,13 +195,7 @@ export default function SettingsPage() {
                     </Button>
                     <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP. Max 2MB.</p>
                   </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    onChange={handleLogoUpload}
-                  />
+                  <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleLogoUpload} />
                 </div>
               </div>
 
@@ -186,13 +213,6 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground">Customers will land directly on the Google review form — zero friction.</p>
               </div>
             </div>
-            <div className="flex items-center justify-between pt-2">
-              <div className="space-y-1">
-                <Label htmlFor="auto-send">Auto-send review requests</Label>
-                <p className="text-xs text-muted-foreground">Immediately send a review request when a customer is added</p>
-              </div>
-              <Switch id="auto-send" checked={autoSendEnabled} onCheckedChange={setAutoSendEnabled} />
-            </div>
 
             <Button variant="hero" className="btn-press" onClick={handleSave} disabled={loading}>
               <Save className="mr-2 h-4 w-4" />
@@ -200,6 +220,7 @@ export default function SettingsPage() {
             </Button>
           </motion.div>
 
+          {/* Subscription */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
