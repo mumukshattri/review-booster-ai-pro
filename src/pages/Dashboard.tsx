@@ -44,6 +44,7 @@ export default function Dashboard() {
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { plan, config } = usePlan();
+  usePageTitle("Dashboard");
 
   const fetchCustomers = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
