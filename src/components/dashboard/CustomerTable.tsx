@@ -51,7 +51,7 @@ function getTimeUntil(dateStr: string | null | undefined): string {
 }
 
 function SequenceBadge({ step, stopped }: { step: number; stopped: boolean }) {
-  if (step === 0) return <span className="text-muted-foreground/40 text-xs">—</span>;
+  if (step === 0) return <span className="text-muted-foreground/40 text-[10px] px-1.5 py-0.5 rounded bg-secondary font-medium">Legacy</span>;
 
   if (stopped && step < 3) {
     return (
