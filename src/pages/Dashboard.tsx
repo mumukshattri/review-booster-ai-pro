@@ -160,7 +160,18 @@ export default function Dashboard() {
 
           <InsightCard totalSent={totalSent} monthlyGoal={100} />
 
-          <CustomerTable customers={customers} isLoading={tableLoading} />
+          <Tabs defaultValue="customers" className="w-full">
+            <TabsList className="bg-secondary/50 border border-border/20">
+              <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Customers</TabsTrigger>
+              <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Feedback</TabsTrigger>
+            </TabsList>
+            <TabsContent value="customers" className="mt-4">
+              <CustomerTable customers={customers} isLoading={tableLoading} />
+            </TabsContent>
+            <TabsContent value="feedback" className="mt-4">
+              <FeedbackInbox />
+            </TabsContent>
+          </Tabs>
 
           <AddCustomerDialog
             open={addOpen}
