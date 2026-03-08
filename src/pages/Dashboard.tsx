@@ -195,6 +195,7 @@ export default function Dashboard() {
   const totalOpened = customers.filter(c => c.opened).length;
   const totalClicked = customers.filter(c => c.clicked).length;
   const reviewsSubmitted = customers.filter(c => (c as any).reviewed).length;
+  const activeSequences = customers.filter(c => (c.sequence_step || 0) > 0 && (c.sequence_step || 0) < 3 && !c.sequence_stopped).length;
   const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0;
   const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
