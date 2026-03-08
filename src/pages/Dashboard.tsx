@@ -208,6 +208,7 @@ export default function Dashboard() {
             openRate={openRate}
             clickRate={clickRate}
             customersCount={customers.length}
+            reviewsSubmitted={reviewsSubmitted}
           />
 
           <InsightCard totalSent={totalSent} monthlyGoal={100} />
