@@ -1,4 +1,10 @@
-import { Users, MoreHorizontal, Check, Minus } from "lucide-react";
+import { Users, MoreHorizontal, Check, Minus, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { CustomerTableSkeleton } from "./CustomerTableSkeleton";
 
