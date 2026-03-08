@@ -9,6 +9,7 @@ import { InsightCard } from "@/components/dashboard/InsightCard";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { FeedbackInbox } from "@/components/dashboard/FeedbackInbox";
 import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
+import { DashboardIntro } from "@/components/DashboardIntro";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import confetti from "canvas-confetti";
 
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [adding, setAdding] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => !localStorage.getItem("hasSeenIntro"));
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -189,8 +191,15 @@ export default function Dashboard() {
   const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0;
   const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
+  const handleIntroComplete = useCallback(() => {
+    localStorage.setItem("hasSeenIntro", "true");
+    setShowIntro(false);
+  }, []);
+
   return (
-    <DashboardLayout>
+    <>
+      {showIntro && <DashboardIntro onComplete={handleIntroComplete} />}
+      <DashboardLayout>
       <PageTransition>
         <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
           <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
@@ -238,6 +247,7 @@ export default function Dashboard() {
           />
         </div>
       </PageTransition>
-    </DashboardLayout>
+      </DashboardLayout>
+    </>
   );
 }

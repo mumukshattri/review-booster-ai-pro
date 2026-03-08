@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PageTransition } from "@/components/PageTransition";
@@ -37,11 +37,8 @@ export default function Signup() {
       <AnimatedBackground />
       <PageTransition>
         <div className="w-full max-w-sm relative z-10">
-          <Link to="/" className="flex items-center gap-2.5 justify-center mb-8">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <Star className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-foreground tracking-tight">ReviewBoost</span>
+          <Link to="/" className="flex justify-center mb-8">
+            <Logo size={36} />
           </Link>
           <div className="glass-card p-8">
             <h1 className="text-2xl font-bold text-foreground mb-1">Start your free trial</h1>

@@ -1,7 +1,8 @@
-import { LayoutDashboard, Settings, Star, LogOut } from "lucide-react";
+import { LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/Logo";
 import {
   Sidebar,
   SidebarContent,
@@ -34,11 +35,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <SidebarContent>
         <SidebarGroup>
-          <div className="flex items-center gap-2.5 px-4 py-5 mb-2">
-            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center shrink-0">
-              <Star className="h-3.5 w-3.5 text-primary-foreground" />
-            </div>
-            {!collapsed && <span className="text-base font-bold text-sidebar-primary-foreground tracking-tight">ReviewBoost</span>}
+          <div className="px-4 py-5 mb-2">
+            <Logo size={28} showText={!collapsed} textClassName="text-sidebar-primary-foreground" />
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
