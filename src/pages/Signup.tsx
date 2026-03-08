@@ -16,6 +16,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  usePageTitle("Sign Up");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();

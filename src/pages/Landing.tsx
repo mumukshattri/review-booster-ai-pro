@@ -340,10 +340,13 @@ export default function Landing() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: dur * 2, ease }}
-          className="border-t border-border/30 py-8 relative z-10"
+          className="border-t border-border/30 py-8 sm:py-12 relative z-10"
         >
-          <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-            © 2026 ReviewBoost. All rights reserved.
+          <div className="container mx-auto px-4 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              © 2026 ReviewBoost. Built for local businesses that care about their reputation.
+            </p>
+          </div>
           </div>
         </motion.footer>
       </PageTransition>
