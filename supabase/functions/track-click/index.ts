@@ -14,7 +14,18 @@ Deno.serve(async (req) => {
   const cid = url.searchParams.get("cid");
   const fallbackUrl = url.searchParams.get("url") || "https://google.com";
 
-  let reviewUrl = fallbackUrl;
+  // Redirect to the sentiment landing page instead of directly to Google
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const projectId = SUPABASE_URL.replace("https://", "").replace(".supabase.co", "");
+  
+  // Build the review landing page URL on the frontend app
+  // We need to get the app URL - use the referer or construct from project
+  const appOrigin = req.headers.get("referer") 
+    ? new URL(req.headers.get("referer")!).origin 
+    : null;
+
+  // Redirect to the sentiment filter page with customer ID
+  const sentimentUrl = `/review?cid=${cid}&url=${encodeURIComponent(fallbackUrl)}`;
 
   try {
     const supabase = createClient(
@@ -47,22 +58,31 @@ Deno.serve(async (req) => {
           .eq("id", customer.user_id)
           .single();
 
+        let reviewUrl = fallbackUrl;
         if (profile?.direct_review_url) {
           reviewUrl = profile.direct_review_url;
         } else if (profile?.review_url) {
           reviewUrl = profile.review_url;
         }
+
+        // Redirect to sentiment landing page on the app
+        // We use a special edge function that serves the HTML page
+        const landingUrl = `${SUPABASE_URL}/functions/v1/review-landing?cid=${cid}&url=${encodeURIComponent(reviewUrl)}`;
+        return new Response(null, {
+          status: 302,
+          headers: { Location: landingUrl, "Access-Control-Allow-Origin": "*" },
+        });
       }
     }
   } catch (err) {
     console.error("track-click error:", err);
   }
 
-  // Always redirect, never crash
+  // Fallback: redirect to the review URL directly
   return new Response(null, {
     status: 302,
     headers: {
-      Location: reviewUrl,
+      Location: fallbackUrl,
       "Access-Control-Allow-Origin": "*",
     },
   });
