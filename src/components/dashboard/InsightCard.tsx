@@ -4,13 +4,13 @@ import { CountUp } from "@/components/CountUp";
 import { TiltCard } from "@/components/TiltCard";
 
 interface InsightCardProps {
-  totalSent: number;
+  reviewsSubmitted: number;
   monthlyGoal: number;
 }
 
-export function InsightCard({ totalSent, monthlyGoal }: InsightCardProps) {
+export function InsightCard({ reviewsSubmitted, monthlyGoal }: InsightCardProps) {
   const reducedMotion = useReducedMotion();
-  const goalProgress = Math.min((totalSent / monthlyGoal) * 100, 100);
+  const goalProgress = monthlyGoal > 0 ? Math.min((reviewsSubmitted / monthlyGoal) * 100, 100) : 0;
 
   return (
     <TiltCard className="w-full" tiltAmount={6}>
@@ -34,7 +34,7 @@ export function InsightCard({ totalSent, monthlyGoal }: InsightCardProps) {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-2xl font-black text-foreground tabular-nums">
-              <CountUp end={totalSent} duration={1000} />
+              <CountUp end={reviewsSubmitted} duration={1000} />
             </span>
             <span className="text-sm text-muted-foreground">/ {monthlyGoal}</span>
           </div>
@@ -55,7 +55,7 @@ export function InsightCard({ totalSent, monthlyGoal }: InsightCardProps) {
         <p className="text-xs text-muted-foreground mt-3 relative z-10 tracking-wide">
           {goalProgress >= 100
             ? "🎉 Goal reached! Amazing work."
-            : `${Math.round(goalProgress)}% complete — ${monthlyGoal - totalSent} reviews to go`}
+            : `${Math.round(goalProgress)}% complete — ${monthlyGoal - reviewsSubmitted} reviews to go`}
         </p>
       </motion.div>
     </TiltCard>

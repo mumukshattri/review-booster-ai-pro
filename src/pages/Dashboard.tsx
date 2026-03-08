@@ -223,7 +223,7 @@ export default function Dashboard() {
             reviewsSubmitted={reviewsSubmitted}
           />
 
-          <InsightCard totalSent={totalSent} monthlyGoal={100} />
+          <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
 
           <Tabs defaultValue="customers" className="w-full">
             <TabsList className="bg-secondary/50 border border-border/20">
