@@ -140,7 +140,7 @@ Thank you for visiting ${businessName}!
 ${personalizedLine}
 It only takes 30 seconds:
 
-${feedbackPageUrl}
+${linkUrl}
 
 Thanks,
 ${businessName} team`;
