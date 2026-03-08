@@ -10,6 +10,7 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+import FeedbackPage from "./pages/FeedbackPage";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/feedback/:customerId" element={<FeedbackPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
