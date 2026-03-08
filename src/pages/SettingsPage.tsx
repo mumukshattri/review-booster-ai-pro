@@ -43,7 +43,8 @@ export default function SettingsPage() {
       business_name: businessName,
       review_url: reviewUrl,
       direct_review_url: directReviewUrl,
-    }).eq("id", user.id);
+      auto_send_enabled: autoSendEnabled,
+    } as any).eq("id", user.id);
     setLoading(false);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
