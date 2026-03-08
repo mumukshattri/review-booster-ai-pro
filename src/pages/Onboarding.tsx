@@ -34,6 +34,7 @@ export default function Onboarding() {
       id: user.id,
       business_name: businessName,
       review_url: reviewUrl,
+      direct_review_url: directReviewUrl,
       subscription_status: "trial",
     });
     setLoading(false);
