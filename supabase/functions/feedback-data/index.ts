@@ -27,11 +27,23 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Stop the email sequence (customer engaged)
+    if (action === "stop-sequence") {
+      await supabase
+        .from("customers")
+        .update({ sequence_stopped: true, clicked: true })
+        .eq("id", customerId);
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Save review completion status
     if (action === "reviewed") {
       await supabase
         .from("customers")
-        .update({ reviewed: reviewed === true })
+        .update({ reviewed: reviewed === true, sequence_stopped: true })
         .eq("id", customerId);
 
       return new Response(JSON.stringify({ success: true }), {

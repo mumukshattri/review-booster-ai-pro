@@ -15,5 +15,9 @@ verify_jwt = false
 [functions.feedback-data]
 verify_jwt = false
 
+
+[functions.process-sequence]
+verify_jwt = false
+
 [functions.send-demo-email]
 verify_jwt = false

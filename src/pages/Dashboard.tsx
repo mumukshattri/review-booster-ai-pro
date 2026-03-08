@@ -20,6 +20,8 @@ interface Customer {
   sent_at: string | null;
   opened: boolean;
   clicked: boolean;
+  sequence_step?: number;
+  sequence_stopped?: boolean;
 }
 
 export default function Dashboard() {

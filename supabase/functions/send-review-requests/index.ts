@@ -6,6 +6,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const SEQUENCE_PROMPTS: Record<number, string> = {
+  1: `Write ONE short friendly sentence (max 20 words) thanking CUSTOMER_NAME for visiting BUSINESS_NAME and asking them to share their experience. Warm first-time tone. Output ONLY that one sentence.`,
+  2: `Write ONE short gentle follow-up sentence (max 20 words) reminding CUSTOMER_NAME about their visit to BUSINESS_NAME and asking if they'd take a moment to leave a review. Output ONLY that one sentence.`,
+  3: `Write ONE short final friendly nudge sentence (max 20 words) for CUSTOMER_NAME about BUSINESS_NAME, mentioning this is a last reminder to share their experience. Output ONLY that one sentence.`,
+};
+
+const SEQUENCE_SUBJECTS: Record<number, (name: string, biz: string) => string> = {
+  1: (name) => `${name}, how was your visit?`,
+  2: (name, biz) => `Still thinking about ${biz}?`,
+  3: (name) => `Last chance to share your experience, ${name}`,
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,7 +47,9 @@ Deno.serve(async (req) => {
     }
 
     const userId = user.id;
-    const { customerIds } = await req.json();
+    const { customerIds, sequenceStep } = await req.json();
+    const step = sequenceStep || 1;
+
     if (!customerIds?.length) {
       return new Response(JSON.stringify({ error: "No customer IDs provided" }), {
         status: 400,
@@ -78,16 +92,21 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const businessName = profile.business_name || "our business";
     const reviewUrl = profile.direct_review_url || profile.review_url;
-
-    // Open tracking pixel URL
     const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open`;
+
+    // Feedback page URL for sentiment filtering
+    const appUrl = Deno.env.get("APP_URL") || "https://id-preview--d23d881d-4508-446b-a2fe-10f9fb977280.lovable.app";
 
     const results = [];
 
     for (const customer of customers) {
-      console.log(`Processing email for: ${customer.name} (${customer.email})`);
+      console.log(`[Seq ${step}] Processing: ${customer.name} (${customer.email})`);
 
-      // Use Claude to personalize just the middle paragraph
+      const promptTemplate = SEQUENCE_PROMPTS[step] || SEQUENCE_PROMPTS[1];
+      const prompt = promptTemplate
+        .replace("CUSTOMER_NAME", customer.name)
+        .replace("BUSINESS_NAME", businessName);
+
       const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -98,12 +117,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           model: "claude-haiku-4-5",
           max_tokens: 100,
-          messages: [
-            {
-              role: "user",
-              content: `Write ONE short friendly sentence (max 20 words) thanking ${customer.name} for visiting ${businessName} and asking them to share their experience. Output ONLY that one sentence, nothing else. No greeting, no signature, no link.`,
-            },
-          ],
+          messages: [{ role: "user", content: prompt }],
         }),
       });
 
@@ -116,7 +130,12 @@ Deno.serve(async (req) => {
       const aiData = await anthropicResponse.json();
       const personalizedLine = aiData.content?.[0]?.text?.trim() || `We'd love to hear about your experience at ${businessName}.`;
 
-      // Plain text email body
+      // Link goes to sentiment/feedback page
+      const feedbackPageUrl = `${appUrl}/feedback/${customer.id}`;
+
+      const subjectFn = SEQUENCE_SUBJECTS[step] || SEQUENCE_SUBJECTS[1];
+      const subject = subjectFn(customer.name, businessName);
+
       const plainTextBody = `Hi ${customer.name},
 
 Thank you for visiting ${businessName}!
@@ -124,12 +143,11 @@ Thank you for visiting ${businessName}!
 ${personalizedLine}
 It only takes 30 seconds:
 
-${reviewUrl}
+${feedbackPageUrl}
 
 Thanks,
 ${businessName} team`;
 
-      // Minimal HTML wrapper: plain text look + invisible open tracking pixel
       const htmlBody = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:20px;font-family:sans-serif;font-size:14px;color:#222;">
@@ -147,7 +165,7 @@ ${businessName} team`;
           body: JSON.stringify({
             from: `${businessName} <reviews@nextarcstore.in>`,
             to: [customer.email],
-            subject: `${customer.name}, how was your visit?`,
+            subject,
             html: htmlBody,
             text: plainTextBody,
           }),
@@ -160,11 +178,33 @@ ${businessName} team`;
           continue;
         }
         await sendResp.text();
-        console.log(`Email sent to ${customer.email}`);
+        console.log(`[Seq ${step}] Email sent to ${customer.email}`);
+
+        // Update sequence tracking
+        const nextStep = step;
+        let nextSendAt: string | null = null;
+
+        if (nextStep === 1) {
+          // Schedule email 2 for 3 days later
+          const d = new Date();
+          d.setDate(d.getDate() + 3);
+          nextSendAt = d.toISOString();
+        } else if (nextStep === 2) {
+          // Schedule email 3 for 4 more days (7 days total)
+          const d = new Date();
+          d.setDate(d.getDate() + 4);
+          nextSendAt = d.toISOString();
+        }
+        // Step 3: no next send
 
         await supabase
           .from("customers")
-          .update({ sent_at: new Date().toISOString() })
+          .update({
+            sent_at: new Date().toISOString(),
+            sequence_step: nextStep,
+            next_send_at: nextSendAt,
+            sequence_stopped: nextStep >= 3,
+          } as any)
           .eq("id", customer.id);
 
         results.push({ id: customer.id, success: true });

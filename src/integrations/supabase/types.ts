@@ -21,9 +21,12 @@ export type Database = {
           email: string
           id: string
           name: string
+          next_send_at: string | null
           opened: boolean | null
           reviewed: boolean | null
           sent_at: string | null
+          sequence_step: number
+          sequence_stopped: boolean
           user_id: string
         }
         Insert: {
@@ -32,9 +35,12 @@ export type Database = {
           email: string
           id?: string
           name: string
+          next_send_at?: string | null
           opened?: boolean | null
           reviewed?: boolean | null
           sent_at?: string | null
+          sequence_step?: number
+          sequence_stopped?: boolean
           user_id: string
         }
         Update: {
@@ -43,9 +49,12 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          next_send_at?: string | null
           opened?: boolean | null
           reviewed?: boolean | null
           sent_at?: string | null
+          sequence_step?: number
+          sequence_stopped?: boolean
           user_id?: string
         }
         Relationships: []
