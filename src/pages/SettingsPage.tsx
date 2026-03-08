@@ -11,6 +11,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { usePlan } from "@/hooks/usePlan";
 import { PLANS, PlanType } from "@/lib/plans";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
