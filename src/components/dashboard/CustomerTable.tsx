@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, MoreHorizontal, Check, Minus, Trash2 } from "lucide-react";
+import { Users, MoreHorizontal, Check, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,28 +35,38 @@ interface CustomerTableProps {
 }
 
 function StatusBadge({ status }: { status: "Sent" | "Pending" }) {
-  const isSent = status === "Sent";
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-      isSent
+      status === "Sent"
         ? "bg-primary/15 text-primary"
         : "bg-secondary text-muted-foreground"
     }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${
-        isSent ? "bg-primary animate-pulse" : "bg-muted-foreground/50 animate-pulse"
+        status === "Sent" ? "bg-primary" : "bg-muted-foreground/50"
       }`} />
       {status}
     </span>
   );
 }
 
-function BoolIcon({ value, color }: { value: boolean; color: string }) {
-  return value ? (
-    <div className={`w-6 h-6 rounded-full ${color} flex items-center justify-center`}>
-      <Check className="h-3 w-3 text-foreground" />
+function BoolCell({ value }: { value: boolean | null }) {
+  if (value) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+        Yes
+      </span>
+    );
+  }
+  return <span className="text-muted-foreground/40 text-sm">—</span>;
+}
+
+function AvatarCircle({ name }: { name: string }) {
+  const letter = name.charAt(0).toUpperCase();
+  return (
+    <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+      {letter}
     </div>
-  ) : (
-    <Minus className="h-4 w-4 text-muted-foreground/30" />
   );
 }
 
@@ -83,7 +93,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
           <thead>
             <tr className="border-b border-border/20">
               {["Name", "Email", "Status", "Opened", "Clicked", ""].map((h) => (
-                <th key={h} className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em] p-3 sm:p-4">
+                <th key={h || "actions"} className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em] p-3 sm:p-4">
                   {h}
                 </th>
               ))}
@@ -112,18 +122,23 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                     initial={reducedMotion ? {} : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04, duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
-                    className="border-b border-border/10 table-row-hover group"
+                    className="border-b border-border/10 transition-colors duration-150 hover:bg-secondary/40 group"
                   >
-                    <td className="p-3 sm:p-4 text-sm text-foreground font-medium">{c.name}</td>
-                    <td className="p-3 sm:p-4 text-sm text-muted-foreground font-mono text-xs">{c.email}</td>
+                    <td className="p-3 sm:p-4">
+                      <div className="flex items-center gap-2.5">
+                        <AvatarCircle name={c.name} />
+                        <span className="text-sm text-foreground font-medium">{c.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{c.email}</td>
                     <td className="p-3 sm:p-4">
                       <StatusBadge status={c.sent_at ? "Sent" : "Pending"} />
                     </td>
                     <td className="p-3 sm:p-4">
-                      <BoolIcon value={!!c.opened} color="bg-emerald-500/20" />
+                      <BoolCell value={!!c.opened} />
                     </td>
                     <td className="p-3 sm:p-4">
-                      <BoolIcon value={!!c.clicked} color="bg-amber-500/20" />
+                      <BoolCell value={!!c.clicked} />
                     </td>
                     <td className="p-3 sm:p-4">
                       <DropdownMenu>
