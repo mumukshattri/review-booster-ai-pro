@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -7,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -36,7 +35,6 @@ serve(async (req) => {
     }
 
     const userId = user.id;
-
     const { customerIds } = await req.json();
     if (!customerIds?.length) {
       return new Response(JSON.stringify({ error: "No customer IDs provided" }), {
@@ -45,7 +43,6 @@ serve(async (req) => {
       });
     }
 
-    // Get user profile for business info
     const { data: profile } = await supabase
       .from("profiles")
       .select("business_name, review_url, direct_review_url")
@@ -59,7 +56,6 @@ serve(async (req) => {
       });
     }
 
-    // Get customers
     const { data: customers, error: custError } = await supabase
       .from("customers")
       .select("*")
@@ -77,6 +73,7 @@ serve(async (req) => {
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    console.log("Anthropic key exists:", !!ANTHROPIC_API_KEY);
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -85,7 +82,9 @@ serve(async (req) => {
     const results = [];
 
     for (const customer of customers) {
-      // Generate personalized message via Anthropic Claude
+      console.log("Starting email send...");
+      console.log(`Calling Anthropic API for customer: ${customer.name}`);
+
       let personalizedMessage = "";
       try {
         const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
@@ -96,7 +95,7 @@ serve(async (req) => {
             "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
-            model: "claude-haiku-20240307",
+            model: "claude-3-haiku-20240307",
             max_tokens: 150,
             messages: [
               {
@@ -107,19 +106,24 @@ serve(async (req) => {
           }),
         });
 
-        if (anthropicResponse.ok) {
-          const aiData = await anthropicResponse.json();
-          personalizedMessage = aiData.content?.[0]?.text?.trim() || "";
+        if (!anthropicResponse.ok) {
+          const errorBody = await anthropicResponse.text();
+          console.error("Anthropic API error:", anthropicResponse.status, errorBody);
+          throw new Error(`Anthropic API error: ${anthropicResponse.status} - ${errorBody}`);
         }
-      } catch {
-        // Fallback if AI fails
+
+        const aiData = await anthropicResponse.json();
+        console.log("Anthropic response:", JSON.stringify(aiData));
+        personalizedMessage = aiData.content?.[0]?.text?.trim() || "";
+      } catch (error) {
+        console.error("Anthropic error:", error);
       }
 
       if (!personalizedMessage) {
+        console.log("Using fallback message (Anthropic failed or returned empty)");
         personalizedMessage = `Hi ${customer.name}, thank you for choosing ${businessName}! We'd love to hear about your experience. Your feedback helps us improve and helps others discover us.`;
       }
 
-      // Build tracking URLs
       const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open?cid=${customer.id}`;
       const emailReviewUrl = profile.direct_review_url || profile.review_url;
       const trackClickUrl = `${SUPABASE_URL}/functions/v1/track-click?cid=${customer.id}&url=${encodeURIComponent(emailReviewUrl)}`;
@@ -146,8 +150,8 @@ serve(async (req) => {
 </body>
 </html>`;
 
-      // Send via Resend
       try {
+        console.log("Sending email via Resend...");
         const sendResp = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -169,8 +173,8 @@ serve(async (req) => {
           continue;
         }
         await sendResp.text();
+        console.log("Email sent successfully!");
 
-        // Mark as sent
         await supabase
           .from("customers")
           .update({ sent_at: new Date().toISOString() })
