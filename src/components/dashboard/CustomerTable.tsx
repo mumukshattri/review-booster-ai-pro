@@ -135,7 +135,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => onDelete?.(c.id)}
+                            onClick={() => setDeleteTarget(c)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
