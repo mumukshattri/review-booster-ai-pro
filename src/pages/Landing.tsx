@@ -346,8 +346,7 @@ export default function Landing() {
             <p className="text-sm text-muted-foreground">
               © 2026 ReviewBoost. Built for local businesses that care about their reputation.
             </p>
-          </div>
-          </div>
+           </div>
         </motion.footer>
       </PageTransition>
     </div>
