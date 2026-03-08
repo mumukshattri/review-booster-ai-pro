@@ -62,6 +62,7 @@ function BoolIcon({ value, color }: { value: boolean; color: string }) {
 
 export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableProps) {
   const reducedMotion = useReducedMotion();
+  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
 
   if (isLoading) return <CustomerTableSkeleton />;
 
