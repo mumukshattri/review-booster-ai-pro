@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [reviewUrl, setReviewUrl] = useState("");
   const [directReviewUrl, setDirectReviewUrl] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
+  const [autoSendEnabled, setAutoSendEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
