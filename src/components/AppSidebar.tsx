@@ -1,7 +1,8 @@
-import { LayoutDashboard, Settings, Star, LogOut } from "lucide-react";
+import { LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/Logo";
 import {
   Sidebar,
   SidebarContent,
