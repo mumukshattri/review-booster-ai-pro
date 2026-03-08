@@ -9,6 +9,9 @@ import { CustomCursor } from "@/components/CustomCursor";
 import { TiltCard } from "@/components/TiltCard";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
+import { HeroStats } from "@/components/landing/HeroStats";
+import { LiveDemoSection } from "@/components/landing/LiveDemoSection";
+import { ROICalculator } from "@/components/landing/ROICalculator";
 import { useState } from "react";
 
 const steps = [
