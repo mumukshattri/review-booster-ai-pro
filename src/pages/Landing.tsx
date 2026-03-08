@@ -7,6 +7,7 @@ import { CountUp } from "@/components/CountUp";
 import { PageTransition } from "@/components/PageTransition";
 import { CustomCursor } from "@/components/CustomCursor";
 import { TiltCard } from "@/components/TiltCard";
+import { PricingSection } from "@/components/landing/PricingSection";
 import { useState } from "react";
 
 const steps = [
