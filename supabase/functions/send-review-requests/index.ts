@@ -73,20 +73,21 @@ Deno.serve(async (req) => {
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    console.log("Anthropic key exists:", !!ANTHROPIC_API_KEY);
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const businessName = profile.business_name || "our business";
-    const emailReviewUrl = profile.direct_review_url || profile.review_url;
-    console.log("Review URL:", emailReviewUrl);
+    const reviewUrl = profile.direct_review_url || profile.review_url;
+
+    // Open tracking pixel URL
+    const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open`;
 
     const results = [];
 
     for (const customer of customers) {
-      console.log("Starting email send...");
-      console.log(`Calling Anthropic API for customer: ${customer.name}`);
+      console.log(`Processing email for: ${customer.name} (${customer.email})`);
 
+      // Use Claude to personalize just the middle paragraph
       const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -96,11 +97,11 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           model: "claude-haiku-4-5",
-          max_tokens: 150,
+          max_tokens: 100,
           messages: [
             {
               role: "user",
-              content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Include this exact URL as the review link, do not change it: ${emailReviewUrl}. Output ONLY the email body text, no subject line, no greeting, no signature.`,
+              content: `Write ONE short friendly sentence (max 20 words) thanking ${customer.name} for visiting ${businessName} and asking them to share their experience. Output ONLY that one sentence, nothing else. No greeting, no signature, no link.`,
             },
           ],
         }),
@@ -109,46 +110,34 @@ Deno.serve(async (req) => {
       if (!anthropicResponse.ok) {
         const errorBody = await anthropicResponse.text();
         console.error("Anthropic API error:", anthropicResponse.status, errorBody);
-        throw new Error(`Anthropic API error: ${anthropicResponse.status} - ${errorBody}`);
+        throw new Error(`Anthropic API error: ${anthropicResponse.status}`);
       }
 
       const aiData = await anthropicResponse.json();
-      console.log("Anthropic response:", JSON.stringify(aiData));
-      const personalizedMessage = aiData.content?.[0]?.text?.trim();
-      if (!personalizedMessage) {
-        throw new Error("Anthropic returned empty message");
-      }
+      const personalizedLine = aiData.content?.[0]?.text?.trim() || `We'd love to hear about your experience at ${businessName}.`;
 
-      // Point to the public feedback page instead of track-click directly
-      const appUrl = Deno.env.get("APP_URL") || "https://id-preview--d23d881d-4508-446b-a2fe-10f9fb977280.lovable.app";
-      const feedbackPageUrl = `${appUrl}/feedback/${customer.id}`;
+      // Plain text email body
+      const plainTextBody = `Hi ${customer.name},
 
-      const plainTextBody = `Hi ${customer.name},\n\nThank you for visiting ${businessName}! 🙏\n\nWe'd love to hear how we did. Your feedback helps us improve and helps others find us.\n\nTakes just 30 seconds — means the world to us! 😊\n\n⭐⭐⭐⭐⭐\n\n${feedbackPageUrl}\n\nSent with ❤️ by ${businessName} · You received this because you recently visited us.`;
+Thank you for visiting ${businessName}!
 
+${personalizedLine}
+It only takes 30 seconds:
+
+${reviewUrl}
+
+Thanks,
+${businessName} team`;
+
+      // Minimal HTML wrapper: plain text look + invisible open tracking pixel
       const htmlBody = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff;">
-<tr><td align="center" style="padding:20px 0;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-<tr><td style="padding:24px 32px 8px 32px;font-size:13px;color:#9ca3af;">${businessName}</td></tr>
-<tr><td style="padding:8px 32px;font-size:16px;color:#1f2937;line-height:1.6;">
-<p style="margin:0 0 16px 0;">Hi ${customer.name},</p>
-<p style="margin:0 0 16px 0;">Thank you for visiting ${businessName}! 🙏</p>
-<p style="margin:0 0 16px 0;">We'd love to hear how we did. Your feedback helps us improve and helps others find us.</p>
-<p style="margin:0 0 24px 0;">Takes just 30 seconds — means the world to us! 😊</p>
-<p style="margin:0 0 24px 0;font-size:20px;text-align:center;">⭐⭐⭐⭐⭐</p>
-<p style="margin:0 0 24px 0;text-align:center;">
-<a href="${feedbackPageUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:15px;font-weight:500;">Share Your Experience ⭐</a>
-</p>
-</td></tr>
-<tr><td style="padding:24px 32px 32px 32px;font-size:12px;color:#9ca3af;line-height:1.5;text-align:center;">Sent with ❤️ by ${businessName} · You received this because you recently visited us.</td></tr>
-</table>
-</td></tr></table>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:20px;font-family:sans-serif;font-size:14px;color:#222;">
+<pre style="white-space:pre-wrap;font-family:inherit;font-size:inherit;margin:0;">${plainTextBody}</pre>
+<img src="${trackOpenUrl}?cid=${customer.id}" width="1" height="1" style="display:none;" alt="" />
 </body></html>`;
 
       try {
-        console.log("Sending email via Resend...");
         const sendResp = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -158,7 +147,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: `${businessName} <reviews@nextarcstore.in>`,
             to: [customer.email],
-            subject: `${customer.name}, how was your experience at ${businessName}?`,
+            subject: `${customer.name}, how was your visit?`,
             html: htmlBody,
             text: plainTextBody,
           }),
@@ -171,7 +160,7 @@ Deno.serve(async (req) => {
           continue;
         }
         await sendResp.text();
-        console.log("Email sent successfully!");
+        console.log(`Email sent to ${customer.email}`);
 
         await supabase
           .from("customers")
