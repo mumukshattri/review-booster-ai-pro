@@ -82,15 +82,32 @@ export default function Dashboard() {
     setAdding(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setAdding(false); return; }
-    const { error } = await supabase.from("customers").insert({ user_id: user.id, name: newName.trim(), email: newEmail.trim() });
-    setAdding(false);
+    const { data: inserted, error } = await supabase.from("customers").insert({ user_id: user.id, name: newName.trim(), email: newEmail.trim() }).select().single();
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Customer added!" });
-      setNewName(""); setNewEmail(""); setAddOpen(false);
-      fetchCustomers();
+      setAdding(false);
+      return;
     }
+    toast({ title: "Customer added!" });
+    setNewName(""); setNewEmail(""); setAddOpen(false);
+    fetchCustomers();
+
+    // Auto-send if enabled
+    if (inserted) {
+      const { data: profile } = await supabase.from("profiles").select("auto_send_enabled").eq("id", user.id).single();
+      if ((profile as any)?.auto_send_enabled) {
+        try {
+          await supabase.functions.invoke("send-review-requests", {
+            body: { customerIds: [inserted.id] },
+          });
+          toast({ title: "Review request auto-sent! 📧" });
+          fetchCustomers();
+        } catch (err: any) {
+          console.error("Auto-send error:", err);
+        }
+      }
+    }
+    setAdding(false);
   };
 
   const handleSendRequests = async () => {
