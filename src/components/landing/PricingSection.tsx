@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Check } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
 
@@ -44,6 +44,19 @@ const tiers = [
     ],
     popular: false,
   },
+];
+
+const comparisonRows: { feature: string; starter: boolean | string; pro: boolean | string; agency: boolean | string }[] = [
+  { feature: "Review requests / month", starter: "50", pro: "500", agency: "Unlimited" },
+  { feature: "AI-personalized emails", starter: true, pro: true, agency: true },
+  { feature: "Basic dashboard", starter: true, pro: true, agency: true },
+  { feature: "Real-time analytics", starter: false, pro: true, agency: true },
+  { feature: "CSV bulk import", starter: false, pro: true, agency: true },
+  { feature: "Multiple business locations", starter: false, pro: false, agency: true },
+  { feature: "White-label emails", starter: false, pro: false, agency: true },
+  { feature: "Advanced analytics", starter: false, pro: false, agency: true },
+  { feature: "Onboarding call", starter: false, pro: false, agency: true },
+  { feature: "Email support", starter: "Standard", pro: "Priority", agency: "Priority" },
 ];
 
 interface PricingSectionProps {
@@ -182,6 +195,53 @@ export function PricingSection({ dur, ease }: PricingSectionProps) {
           );
         })}
       </div>
+
+      {/* Comparison table */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: dur * 2.5, ease }}
+        className="max-w-5xl mx-auto mt-16 sm:mt-24"
+      >
+        <h3 className="text-lg sm:text-xl font-bold text-center mb-8 tracking-tight">
+          Compare Plans
+        </h3>
+        <div className="glass-card overflow-hidden rounded-xl border-border/20">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/20">
+                  <th className="text-left py-4 px-5 text-muted-foreground font-medium w-[40%]">Feature</th>
+                  <th className="text-center py-4 px-4 text-muted-foreground font-medium">Starter</th>
+                  <th className="text-center py-4 px-4 font-semibold text-primary">Pro</th>
+                  <th className="text-center py-4 px-4 text-muted-foreground font-medium">Agency</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonRows.map((row, i) => (
+                  <tr key={i} className="border-b border-border/10 last:border-0 hover:bg-secondary/30 transition-colors">
+                    <td className="py-3.5 px-5 text-foreground/80">{row.feature}</td>
+                    {[row.starter, row.pro, row.agency].map((val, j) => (
+                      <td key={j} className="py-3.5 px-4 text-center">
+                        {val === true ? (
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center mx-auto ${j === 1 ? "gradient-primary" : "bg-muted"}`}>
+                            <Check className={`h-3 w-3 ${j === 1 ? "text-primary-foreground" : "text-foreground"}`} />
+                          </div>
+                        ) : val === false ? (
+                          <Minus className="h-4 w-4 text-muted-foreground/40 mx-auto" />
+                        ) : (
+                          <span className={`text-sm ${j === 1 ? "text-foreground font-medium" : "text-muted-foreground"}`}>{val}</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
     </section>
   );
 }
