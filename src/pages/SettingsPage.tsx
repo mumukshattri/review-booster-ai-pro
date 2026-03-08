@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
   const [reviewUrl, setReviewUrl] = useState("");
+  const [directReviewUrl, setDirectReviewUrl] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
