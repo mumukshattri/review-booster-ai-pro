@@ -240,6 +240,7 @@ export default function Dashboard() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Add Customer</DialogTitle>
+                <DialogDescription>Add a single customer manually.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
