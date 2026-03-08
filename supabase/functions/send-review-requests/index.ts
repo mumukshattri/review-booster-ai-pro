@@ -78,6 +78,8 @@ Deno.serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const businessName = profile.business_name || "our business";
+    const emailReviewUrl = profile.direct_review_url || profile.review_url;
+    console.log("Review URL:", emailReviewUrl);
 
     const results = [];
 
@@ -98,7 +100,7 @@ Deno.serve(async (req) => {
           messages: [
             {
               role: "user",
-              content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Output ONLY the email body text, no subject line, no greeting, no signature.`,
+              content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Include this exact URL as the review link, do not change it: ${emailReviewUrl}. Output ONLY the email body text, no subject line, no greeting, no signature.`,
             },
           ],
         }),
@@ -117,7 +119,6 @@ Deno.serve(async (req) => {
         throw new Error("Anthropic returned empty message");
       }
 
-      const emailReviewUrl = profile.direct_review_url || profile.review_url;
       const trackClickUrl = `${SUPABASE_URL}/functions/v1/track-click?cid=${customer.id}&url=${encodeURIComponent(emailReviewUrl)}`;
 
       const plainTextBody = `Hi ${customer.name},\n\nHope you enjoyed your visit to ${businessName}!\n\nWould you mind sharing your experience? It really helps us improve.\n\n${trackClickUrl}\n\nThanks,\n${businessName} team`;
