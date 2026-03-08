@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
           messages: [
             {
               role: "user",
-              content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Output ONLY the email body text, no subject line, no greeting, no signature.`,
+              content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Include this exact URL as the review link, do not change it: ${emailReviewUrl}. Output ONLY the email body text, no subject line, no greeting, no signature.`,
             },
           ],
         }),
