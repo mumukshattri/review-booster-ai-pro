@@ -8,6 +8,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { CustomCursor } from "@/components/CustomCursor";
 import { TiltCard } from "@/components/TiltCard";
 import { PricingSection } from "@/components/landing/PricingSection";
+import { FAQSection } from "@/components/landing/FAQSection";
 import { useState } from "react";
 
 const steps = [
