@@ -51,6 +51,7 @@ export type Database = {
         Row: {
           business_name: string | null
           created_at: string
+          direct_review_url: string | null
           id: string
           review_url: string | null
           subscription_status: string | null
@@ -59,6 +60,7 @@ export type Database = {
         Insert: {
           business_name?: string | null
           created_at?: string
+          direct_review_url?: string | null
           id: string
           review_url?: string | null
           subscription_status?: string | null
@@ -67,6 +69,7 @@ export type Database = {
         Update: {
           business_name?: string | null
           created_at?: string
+          direct_review_url?: string | null
           id?: string
           review_url?: string | null
           subscription_status?: string | null

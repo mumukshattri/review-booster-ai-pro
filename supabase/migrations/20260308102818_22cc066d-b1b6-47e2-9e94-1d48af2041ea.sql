@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN direct_review_url text;
