@@ -9,10 +9,12 @@ import { InsightCard } from "@/components/dashboard/InsightCard";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { FeedbackInbox } from "@/components/dashboard/FeedbackInbox";
 import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardIntro } from "@/components/DashboardIntro";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePlan } from "@/hooks/usePlan";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { canAddCustomer } from "@/lib/plans";
 import confetti from "canvas-confetti";
 
@@ -42,6 +44,7 @@ export default function Dashboard() {
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { plan, config } = usePlan();
+  usePageTitle("Dashboard");
 
   const fetchCustomers = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -225,50 +228,57 @@ export default function Dashboard() {
             sending={sending}
           />
 
-          <StatsGrid
-            totalSent={totalSent}
-            openRate={openRate}
-            clickRate={clickRate}
-            customersCount={customers.length}
-            reviewsSubmitted={reviewsSubmitted}
-            activeSequences={activeSequences}
-          />
+          {!tableLoading && customers.length === 0 ? (
+            <DashboardEmptyState onAddClick={() => setAddOpen(true)} />
+          ) : (
+            <>
+              <StatsGrid
+                totalSent={totalSent}
+                openRate={openRate}
+                clickRate={clickRate}
+                customersCount={customers.length}
+                reviewsSubmitted={reviewsSubmitted}
+                activeSequences={activeSequences}
+              />
 
-          {config.hasAiInsights && (
-            <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
-          )}
-
-          <Tabs defaultValue="customers" className="w-full">
-            <TabsList className="bg-secondary/50 border border-border/20">
-              <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
-                Customers
-                {atLimit && (
-                  <span className="ml-2 text-[10px] font-semibold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full">
-                    {customers.length}/{config.maxCustomers}
-                  </span>
-                )}
-              </TabsTrigger>
-              {config.hasFeedback && (
-                <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Feedback</TabsTrigger>
+              {config.hasAiInsights && (
+                <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
               )}
-            </TabsList>
-            <TabsContent value="customers" className="mt-4">
-              <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
-            </TabsContent>
-            {config.hasFeedback ? (
-              <TabsContent value="feedback" className="mt-4">
-                <FeedbackInbox />
-              </TabsContent>
-            ) : null}
-          </Tabs>
 
-          {!config.hasFeedback && (
-            <UpgradePrompt
-              title="Unlock Private Feedback"
-              description="Upgrade to Pro to capture negative feedback privately before it becomes a public review."
-              targetPlan="Pro"
-            />
+              <Tabs defaultValue="customers" className="w-full">
+                <TabsList className="bg-secondary/50 border border-border/20 w-full sm:w-auto">
+                  <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">
+                    Customers
+                    {atLimit && (
+                      <span className="ml-2 text-[10px] font-semibold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full">
+                        {customers.length}/{config.maxCustomers}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                  {config.hasFeedback && (
+                    <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">Feedback</TabsTrigger>
+                  )}
+                </TabsList>
+                <TabsContent value="customers" className="mt-4">
+                  <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
+                </TabsContent>
+                {config.hasFeedback ? (
+                  <TabsContent value="feedback" className="mt-4">
+                    <FeedbackInbox />
+                  </TabsContent>
+                ) : null}
+              </Tabs>
+
+              {!config.hasFeedback && (
+                <UpgradePrompt
+                  title="Unlock Private Feedback"
+                  description="Upgrade to Pro to capture negative feedback privately before it becomes a public review."
+                  targetPlan="Pro"
+                />
+              )}
+            </>
           )}
+
 
           <AddCustomerDialog
             open={addOpen}
