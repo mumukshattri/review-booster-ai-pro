@@ -9,10 +9,12 @@ import { InsightCard } from "@/components/dashboard/InsightCard";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { FeedbackInbox } from "@/components/dashboard/FeedbackInbox";
 import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardIntro } from "@/components/DashboardIntro";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePlan } from "@/hooks/usePlan";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { canAddCustomer } from "@/lib/plans";
 import confetti from "canvas-confetti";
 
