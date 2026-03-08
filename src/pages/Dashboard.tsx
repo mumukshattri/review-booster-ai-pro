@@ -107,7 +107,6 @@ export default function Dashboard() {
       fetchCustomers();
     }
   };
-  };
 
   const handleSendRequests = async () => {
     const unsent = customers.filter(c => !c.sent_at);
