@@ -9,6 +9,9 @@ import { CustomCursor } from "@/components/CustomCursor";
 import { TiltCard } from "@/components/TiltCard";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
+import { HeroStats } from "@/components/landing/HeroStats";
+import { LiveDemoSection } from "@/components/landing/LiveDemoSection";
+import { ROICalculator } from "@/components/landing/ROICalculator";
 import { useState } from "react";
 
 const steps = [
@@ -167,6 +170,9 @@ export default function Landing() {
             </Button>
           </motion.div>
 
+          {/* Hero Stats */}
+          <HeroStats dur={dur} ease={ease} />
+
           {/* Floating review cards */}
           <div className="relative mt-12 sm:mt-20 max-w-4xl mx-auto">
             <motion.div
@@ -276,31 +282,11 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="container mx-auto px-4 pb-16 sm:pb-28 relative z-10">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            {[
-              { value: 50000, suffix: "+", label: "Reviews Generated" },
-              { value: 2400, suffix: "+", label: "Happy Businesses" },
-              { value: 4.9, suffix: "", label: "Avg Rating Boost" },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ delay: i * 0.1, duration: dur * 2, ease }}
-                className="text-center py-4"
-              >
-                <div className="text-3xl md:text-4xl font-black text-foreground">
-                  {stat.value % 1 === 0 ? <CountUp end={stat.value} /> : stat.value}
-                  <span className="gradient-text">{stat.suffix}</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+        {/* Live Demo */}
+        <LiveDemoSection dur={dur} ease={ease} />
+
+        {/* ROI Calculator */}
+        <ROICalculator dur={dur} ease={ease} />
 
         {/* Pricing */}
         <PricingSection dur={dur} ease={ease} />

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PageTransition } from "@/components/PageTransition";
+import { OnboardingChecklist } from "@/components/landing/OnboardingChecklist";
 import { motion } from "framer-motion";
 
 export default function Onboarding() {
@@ -46,8 +47,7 @@ export default function Onboarding() {
   };
 
   const handleStep2 = () => {
-    toast({ title: "Payment integration", description: "Lemon Squeezy checkout will be connected here. Proceeding to dashboard." });
-    navigate("/dashboard");
+    setStep(3);
   };
 
   return (
@@ -64,12 +64,12 @@ export default function Onboarding() {
 
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-3 mb-8">
-            {[1, 2].map((s) => (
+            {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${s === step ? "gradient-primary text-primary-foreground shadow-[0_0_20px_-5px_hsl(263_70%_58%/0.5)]" : s < step ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}>
                   {s}
                 </div>
-                {s < 2 && <div className={`w-12 h-0.5 transition-colors duration-300 ${step > 1 ? "bg-primary" : "bg-secondary"}`} />}
+                {s < 3 && <div className={`w-12 h-0.5 transition-colors duration-300 ${step > s ? "bg-primary" : "bg-secondary"}`} />}
               </div>
             ))}
           </div>
@@ -79,10 +79,9 @@ export default function Onboarding() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="glass-card p-8"
           >
             {step === 1 ? (
-              <>
+              <div className="glass-card p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
                     <Building className="h-5 w-5 text-primary-foreground" />
@@ -121,9 +120,9 @@ export default function Onboarding() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
-              </>
-            ) : (
-              <>
+              </div>
+            ) : step === 2 ? (
+              <div className="glass-card p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
                     <CreditCard className="h-5 w-5 text-primary-foreground" />
@@ -144,7 +143,11 @@ export default function Onboarding() {
                 <p className="text-xs text-muted-foreground text-center mt-3">
                   You'll be redirected to Lemon Squeezy for secure checkout
                 </p>
-              </>
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <OnboardingChecklist />
+              </div>
             )}
           </motion.div>
         </div>
