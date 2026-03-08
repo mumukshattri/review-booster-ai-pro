@@ -149,7 +149,7 @@ export default function Dashboard() {
                   <span className="text-sm text-muted-foreground">{s.label}</span>
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-foreground">
-                  <CountUp end={s.value} duration={1200} />
+                  <CountUp end={s.value} duration={1200} />{s.suffix}
                 </div>
               </motion.div>
             ))}
