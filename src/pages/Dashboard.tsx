@@ -185,8 +185,8 @@ export default function Dashboard() {
   const totalSent = customers.filter(c => c.sent_at).length;
   const totalOpened = customers.filter(c => c.opened).length;
   const totalClicked = customers.filter(c => c.clicked).length;
-  const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0;
-  const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0;
+  const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0;
+  const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
   return (
     <DashboardLayout>
