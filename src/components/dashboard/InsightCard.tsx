@@ -4,13 +4,13 @@ import { CountUp } from "@/components/CountUp";
 import { TiltCard } from "@/components/TiltCard";
 
 interface InsightCardProps {
-  totalSent: number;
+  reviewsSubmitted: number;
   monthlyGoal: number;
 }
 
-export function InsightCard({ totalSent, monthlyGoal }: InsightCardProps) {
+export function InsightCard({ reviewsSubmitted, monthlyGoal }: InsightCardProps) {
   const reducedMotion = useReducedMotion();
-  const goalProgress = Math.min((totalSent / monthlyGoal) * 100, 100);
+  const goalProgress = monthlyGoal > 0 ? Math.min((reviewsSubmitted / monthlyGoal) * 100, 100) : 0;
 
   return (
     <TiltCard className="w-full" tiltAmount={6}>
