@@ -34,7 +34,7 @@ export function InsightCard({ reviewsSubmitted, monthlyGoal }: InsightCardProps)
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-2xl font-black text-foreground tabular-nums">
-              <CountUp end={totalSent} duration={1000} />
+              <CountUp end={reviewsSubmitted} duration={1000} />
             </span>
             <span className="text-sm text-muted-foreground">/ {monthlyGoal}</span>
           </div>
