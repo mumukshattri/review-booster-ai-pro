@@ -73,12 +73,7 @@ export default function Landing() {
       {/* Nav */}
       <nav className="border-b border-border/30 backdrop-blur-xl sticky top-0 z-50 bg-background/60">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <Star className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">ReviewBoost</span>
-          </div>
+          <Logo size={32} />
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-3">

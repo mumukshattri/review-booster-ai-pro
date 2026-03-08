@@ -56,11 +56,8 @@ export default function Onboarding() {
       <AnimatedBackground />
       <PageTransition>
         <div className="w-full max-w-md relative z-10">
-          <div className="flex items-center gap-2.5 justify-center mb-8">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <Star className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-foreground tracking-tight">ReviewBoost</span>
+          <div className="flex justify-center mb-8">
+            <Logo size={36} />
           </div>
 
           {/* Step indicator */}
