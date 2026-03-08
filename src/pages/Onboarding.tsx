@@ -14,12 +14,13 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [businessName, setBusinessName] = useState("");
   const [reviewUrl, setReviewUrl] = useState("");
+  const [directReviewUrl, setDirectReviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleStep1 = async () => {
-    if (!businessName.trim() || !reviewUrl.trim()) {
+    if (!businessName.trim() || !reviewUrl.trim() || !directReviewUrl.trim()) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
@@ -33,6 +34,7 @@ export default function Onboarding() {
       id: user.id,
       business_name: businessName,
       review_url: reviewUrl,
+      direct_review_url: directReviewUrl,
       subscription_status: "trial",
     });
     setLoading(false);
@@ -96,8 +98,23 @@ export default function Onboarding() {
                     <Input id="business" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="Acme Coffee Shop" className="bg-secondary/50 border-border/50" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="review-url">Google Review Page URL</Label>
+                    <Label htmlFor="review-url">Google Maps URL</Label>
                     <Input id="review-url" value={reviewUrl} onChange={e => setReviewUrl(e.target.value)} placeholder="https://g.page/r/..." className="bg-secondary/50 border-border/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="direct-review-url">Direct Review Link</Label>
+                    <Input id="direct-review-url" value={directReviewUrl} onChange={e => setDirectReviewUrl(e.target.value)} placeholder="https://search.google.com/local/writereview?placeid=..." className="bg-secondary/50 border-border/50" />
+                    <div className="text-xs text-muted-foreground space-y-1 mt-1.5 p-3 rounded-lg bg-secondary/30 border border-border/30">
+                      <p className="font-medium text-foreground/70">How to get this link:</p>
+                      <ol className="list-decimal list-inside space-y-0.5 text-muted-foreground/80">
+                        <li>Open Google Maps on desktop</li>
+                        <li>Search your business</li>
+                        <li>Click Reviews tab</li>
+                        <li>Click Write a Review button</li>
+                        <li>Copy the URL from your browser</li>
+                        <li>Paste it here</li>
+                      </ol>
+                    </div>
                   </div>
                   <Button variant="hero" className="btn-press w-full" onClick={handleStep1} disabled={loading}>
                     {loading ? "Saving..." : "Continue"}

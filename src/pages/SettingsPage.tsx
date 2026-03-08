@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
   const [reviewUrl, setReviewUrl] = useState("");
+  const [directReviewUrl, setDirectReviewUrl] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -24,6 +25,7 @@ export default function SettingsPage() {
       if (data) {
         setBusinessName(data.business_name || "");
         setReviewUrl(data.review_url || "");
+        setDirectReviewUrl((data as any).direct_review_url || "");
         setSubscriptionStatus(data.subscription_status || "trial");
       }
     };
@@ -37,6 +39,7 @@ export default function SettingsPage() {
     const { error } = await supabase.from("profiles").update({
       business_name: businessName,
       review_url: reviewUrl,
+      direct_review_url: directReviewUrl,
     }).eq("id", user.id);
     setLoading(false);
     if (error) {
@@ -68,8 +71,13 @@ export default function SettingsPage() {
                 <Input id="business" value={businessName} onChange={e => setBusinessName(e.target.value)} className="bg-secondary/50 border-border/50" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="review-url">Google Review URL</Label>
+                <Label htmlFor="review-url">Google Maps URL</Label>
                 <Input id="review-url" value={reviewUrl} onChange={e => setReviewUrl(e.target.value)} className="bg-secondary/50 border-border/50" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="direct-review-url">Direct Review Link</Label>
+                <Input id="direct-review-url" value={directReviewUrl} onChange={e => setDirectReviewUrl(e.target.value)} placeholder="https://search.google.com/local/writereview?placeid=..." className="bg-secondary/50 border-border/50" />
+                <p className="text-xs text-muted-foreground">Customers will land directly on the Google review form — zero friction.</p>
               </div>
             </div>
             <Button variant="hero" className="btn-press" onClick={handleSave} disabled={loading}>
