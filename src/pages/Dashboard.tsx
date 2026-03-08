@@ -111,14 +111,16 @@ export default function Dashboard() {
   const totalSent = customers.filter(c => c.sent_at).length;
   const totalOpened = customers.filter(c => c.opened).length;
   const totalClicked = customers.filter(c => c.clicked).length;
+  const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0;
+  const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0;
   const monthlyGoal = 100;
   const goalProgress = Math.min((totalSent / monthlyGoal) * 100, 100);
 
   const stats = [
-    { label: "Total Sent", value: totalSent, icon: Mail, color: "text-primary" },
-    { label: "Opened", value: totalOpened, icon: Eye, color: "text-emerald-400" },
-    { label: "Clicked", value: totalClicked, icon: MousePointerClick, color: "text-amber-400" },
-    { label: "Customers", value: customers.length, icon: Users, color: "text-sky-400" },
+    { label: "Total Sent", value: totalSent, icon: Mail, color: "text-primary", suffix: "" },
+    { label: "Open Rate", value: openRate, icon: Eye, color: "text-emerald-400", suffix: "%" },
+    { label: "Click Rate", value: clickRate, icon: MousePointerClick, color: "text-amber-400", suffix: "%" },
+    { label: "Customers", value: customers.length, icon: Users, color: "text-sky-400", suffix: "" },
   ];
 
   return (
