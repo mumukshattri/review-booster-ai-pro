@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, MoreHorizontal, Check, Trash2 } from "lucide-react";
+import { Users, MoreHorizontal, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,12 +26,46 @@ interface Customer {
   sent_at: string | null;
   opened: boolean;
   clicked: boolean;
+  sequence_step?: number;
+  sequence_stopped?: boolean;
 }
 
 interface CustomerTableProps {
   customers: Customer[];
   isLoading: boolean;
   onDelete?: (id: string) => void;
+}
+
+function SequenceBadge({ step, stopped }: { step: number; stopped: boolean }) {
+  if (step === 0) return <span className="text-muted-foreground/40 text-xs">—</span>;
+
+  const labels = ["", "Email 1", "Email 2", "Email 3"];
+
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3].map((s) => {
+        const isSent = s <= step;
+        const isCurrent = s === step && !stopped && step < 3;
+        return (
+          <span
+            key={s}
+            className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+              isSent
+                ? "bg-primary/15 text-primary"
+                : "bg-secondary text-muted-foreground/40"
+            } ${isCurrent ? "ring-1 ring-primary/30" : ""}`}
+          >
+            {isSent ? `${labels[s]} ✓` : labels[s]}
+          </span>
+        );
+      })}
+      {stopped && step < 3 && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-medium">
+          Engaged
+        </span>
+      )}
+    </div>
+  );
 }
 
 function StatusBadge({ status }: { status: "Sent" | "Pending" }) {
@@ -89,10 +123,10 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px]">
+        <table className="w-full min-w-[700px]">
           <thead>
             <tr className="border-b border-border/20">
-              {["Name", "Email", "Status", "Opened", "Clicked", ""].map((h) => (
+              {["Name", "Email", "Status", "Sequence", "Opened", "Clicked", ""].map((h) => (
                 <th key={h || "actions"} className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em] p-3 sm:p-4">
                   {h}
                 </th>
@@ -102,7 +136,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
           <tbody>
             {customers.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-12 text-center text-muted-foreground">
+                <td colSpan={7} className="p-12 text-center text-muted-foreground">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
                       <Users className="h-5 w-5 text-muted-foreground/40" />
@@ -133,6 +167,9 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                     <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{c.email}</td>
                     <td className="p-3 sm:p-4">
                       <StatusBadge status={c.sent_at ? "Sent" : "Pending"} />
+                    </td>
+                    <td className="p-3 sm:p-4">
+                      <SequenceBadge step={c.sequence_step || 0} stopped={!!c.sequence_stopped} />
                     </td>
                     <td className="p-3 sm:p-4">
                       <BoolCell value={!!c.opened} />
