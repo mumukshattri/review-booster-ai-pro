@@ -123,6 +123,26 @@ Deno.serve(async (req) => {
 
       const plainTextBody = `Hi ${customer.name},\n\nHope you enjoyed your visit to ${businessName}!\n\nWould you mind sharing your experience? It really helps us improve.\n\n${trackClickUrl}\n\nThanks,\n${businessName} team`;
 
+      const htmlBody = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff;">
+<tr><td align="center" style="padding:20px 0;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+<tr><td style="padding:24px 32px 8px 32px;font-size:13px;color:#9ca3af;">${businessName}</td></tr>
+<tr><td style="padding:8px 32px;font-size:16px;color:#1f2937;line-height:1.6;">
+<p style="margin:0 0 16px 0;">Hi ${customer.name},</p>
+<p style="margin:0 0 16px 0;">Hope you enjoyed your visit to ${businessName}! Would you mind sharing your experience? It really helps us improve.</p>
+<p style="margin:24px 0;">
+<a href="${trackClickUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:15px;font-weight:500;">Leave a Review ⭐</a>
+</p>
+<p style="margin:16px 0 0 0;">Thanks,<br>${businessName} team</p>
+</td></tr>
+<tr><td style="padding:24px 32px 32px 32px;font-size:12px;color:#9ca3af;line-height:1.5;">You received this because you visited ${businessName}.</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+
       try {
         console.log("Sending email via Resend...");
         const sendResp = await fetch("https://api.resend.com/emails", {
@@ -135,6 +155,7 @@ Deno.serve(async (req) => {
             from: `${businessName} <reviews@nextarcstore.in>`,
             to: [customer.email],
             subject: `${customer.name}, quick question about your visit`,
+            html: htmlBody,
             text: plainTextBody,
           }),
         });
