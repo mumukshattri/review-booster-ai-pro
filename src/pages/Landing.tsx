@@ -23,7 +23,7 @@ const steps = [
   {
     icon: Star,
     title: "Reviews Come In",
-    description: "Customers click through and leave Google reviews effortlessly.",
+    description: "Customers click one link and land directly on the Google review box — ready to rate in seconds. No searching, no clicking around.",
   },
 ];
 
