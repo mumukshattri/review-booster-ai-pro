@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,7 @@ export default function SettingsPage() {
   const [reviewUrl, setReviewUrl] = useState("");
   const [directReviewUrl, setDirectReviewUrl] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
+  const [autoSendEnabled, setAutoSendEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -27,6 +29,7 @@ export default function SettingsPage() {
         setReviewUrl(data.review_url || "");
         setDirectReviewUrl((data as any).direct_review_url || "");
         setSubscriptionStatus(data.subscription_status || "trial");
+        setAutoSendEnabled((data as any).auto_send_enabled || false);
       }
     };
     load();
@@ -40,7 +43,8 @@ export default function SettingsPage() {
       business_name: businessName,
       review_url: reviewUrl,
       direct_review_url: directReviewUrl,
-    }).eq("id", user.id);
+      auto_send_enabled: autoSendEnabled,
+    } as any).eq("id", user.id);
     setLoading(false);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
@@ -80,6 +84,14 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground">Customers will land directly on the Google review form — zero friction.</p>
               </div>
             </div>
+            <div className="flex items-center justify-between pt-2">
+              <div className="space-y-1">
+                <Label htmlFor="auto-send">Auto-send review requests</Label>
+                <p className="text-xs text-muted-foreground">Immediately send a review request when a customer is added</p>
+              </div>
+              <Switch id="auto-send" checked={autoSendEnabled} onCheckedChange={setAutoSendEnabled} />
+            </div>
+
             <Button variant="hero" className="btn-press" onClick={handleSave} disabled={loading}>
               <Save className="mr-2 h-4 w-4" />
               {loading ? "Saving..." : "Save Changes"}

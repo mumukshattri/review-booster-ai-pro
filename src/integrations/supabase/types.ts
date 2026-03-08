@@ -47,8 +47,47 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          created_at: string
+          customer_email: string
+          customer_id: string
+          customer_name: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          customer_id: string
+          customer_name: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          customer_id?: string
+          customer_name?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          auto_send_enabled: boolean
           business_name: string | null
           created_at: string
           direct_review_url: string | null
@@ -58,6 +97,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_send_enabled?: boolean
           business_name?: string | null
           created_at?: string
           direct_review_url?: string | null
@@ -67,6 +107,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_send_enabled?: boolean
           business_name?: string | null
           created_at?: string
           direct_review_url?: string | null

@@ -7,7 +7,9 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsGrid } from "@/components/dashboard/StatsGrid";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
+import { FeedbackInbox } from "@/components/dashboard/FeedbackInbox";
 import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import confetti from "canvas-confetti";
 
 interface Customer {
@@ -80,15 +82,32 @@ export default function Dashboard() {
     setAdding(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setAdding(false); return; }
-    const { error } = await supabase.from("customers").insert({ user_id: user.id, name: newName.trim(), email: newEmail.trim() });
-    setAdding(false);
+    const { data: inserted, error } = await supabase.from("customers").insert({ user_id: user.id, name: newName.trim(), email: newEmail.trim() }).select().single();
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Customer added!" });
-      setNewName(""); setNewEmail(""); setAddOpen(false);
-      fetchCustomers();
+      setAdding(false);
+      return;
     }
+    toast({ title: "Customer added!" });
+    setNewName(""); setNewEmail(""); setAddOpen(false);
+    fetchCustomers();
+
+    // Auto-send if enabled
+    if (inserted) {
+      const { data: profile } = await supabase.from("profiles").select("auto_send_enabled").eq("id", user.id).single();
+      if ((profile as any)?.auto_send_enabled) {
+        try {
+          await supabase.functions.invoke("send-review-requests", {
+            body: { customerIds: [inserted.id] },
+          });
+          toast({ title: "Review request auto-sent! 📧" });
+          fetchCustomers();
+        } catch (err: any) {
+          console.error("Auto-send error:", err);
+        }
+      }
+    }
+    setAdding(false);
   };
 
   const handleSendRequests = async () => {
@@ -141,7 +160,18 @@ export default function Dashboard() {
 
           <InsightCard totalSent={totalSent} monthlyGoal={100} />
 
-          <CustomerTable customers={customers} isLoading={tableLoading} />
+          <Tabs defaultValue="customers" className="w-full">
+            <TabsList className="bg-secondary/50 border border-border/20">
+              <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Customers</TabsTrigger>
+              <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Feedback</TabsTrigger>
+            </TabsList>
+            <TabsContent value="customers" className="mt-4">
+              <CustomerTable customers={customers} isLoading={tableLoading} />
+            </TabsContent>
+            <TabsContent value="feedback" className="mt-4">
+              <FeedbackInbox />
+            </TabsContent>
+          </Tabs>
 
           <AddCustomerDialog
             open={addOpen}

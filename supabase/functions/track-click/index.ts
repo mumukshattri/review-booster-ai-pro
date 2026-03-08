@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
   const fallbackUrl = url.searchParams.get("url") || "https://google.com";
 
   let reviewUrl = fallbackUrl;
+  let businessName = "us";
 
   try {
     const supabase = createClient(
@@ -23,7 +24,6 @@ Deno.serve(async (req) => {
     );
 
     if (cid) {
-      // Update clicked status
       const { error: updateErr } = await supabase
         .from("customers")
         .update({ clicked: true })
@@ -33,7 +33,6 @@ Deno.serve(async (req) => {
         console.error("Failed to update clicked:", updateErr.message);
       }
 
-      // Fetch review_url from profiles via the customer's user_id
       const { data: customer } = await supabase
         .from("customers")
         .select("user_id")
@@ -43,7 +42,7 @@ Deno.serve(async (req) => {
       if (customer?.user_id) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("review_url, direct_review_url")
+          .select("review_url, direct_review_url, business_name")
           .eq("id", customer.user_id)
           .single();
 
@@ -52,17 +51,23 @@ Deno.serve(async (req) => {
         } else if (profile?.review_url) {
           reviewUrl = profile.review_url;
         }
+        if (profile?.business_name) {
+          businessName = profile.business_name;
+        }
       }
     }
   } catch (err) {
     console.error("track-click error:", err);
   }
 
-  // Always redirect, never crash
+  // Redirect to the sentiment landing page served by review-landing edge function
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const landingUrl = `${SUPABASE_URL}/functions/v1/review-landing?cid=${encodeURIComponent(cid || "")}&url=${encodeURIComponent(reviewUrl)}&biz=${encodeURIComponent(businessName)}`;
+
   return new Response(null, {
     status: 302,
     headers: {
-      Location: reviewUrl,
+      Location: landingUrl,
       "Access-Control-Allow-Origin": "*",
     },
   });
