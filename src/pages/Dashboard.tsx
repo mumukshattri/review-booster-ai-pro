@@ -201,7 +201,7 @@ export default function Dashboard() {
 
   return (
     <>
-      {showIntro && <DashboardIntro onComplete={handleIntroComplete} />}
+      {showIntro && <DashboardIntro onComplete={handleIntroComplete} userName={userName} />}
       <DashboardLayout>
       <PageTransition>
         <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
