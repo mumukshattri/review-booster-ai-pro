@@ -22,6 +22,7 @@ interface Customer {
   clicked: boolean;
   sequence_step?: number;
   sequence_stopped?: boolean;
+  next_send_at?: string | null;
 }
 
 export default function Dashboard() {
