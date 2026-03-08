@@ -10,7 +10,7 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
-import FeedbackPage from "./pages/FeedbackPage";
+
 
 const queryClient = new QueryClient();
 
