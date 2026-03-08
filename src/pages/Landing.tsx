@@ -132,7 +132,7 @@ export default function Landing() {
             transition={{ delay: 0.1, duration: dur * 2, ease }}
             className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 sm:mb-6 leading-relaxed px-2"
           >
-            Upload your customers, let AI craft personalized review requests, and watch your Google ratings soar — all hands-free.
+            Upload your customers, let AI send personalized requests, and customers land directly on the Google review box — ready to rate in seconds.
           </motion.p>
 
           {/* Live counter */}
