@@ -9,6 +9,7 @@ const FeedbackPage = () => {
   const { customerId } = useParams<{ customerId: string }>();
   const [state, setState] = useState<FeedbackState>("loading");
   const [businessName, setBusinessName] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [reviewUrl, setReviewUrl] = useState("");
   const [message, setMessage] = useState("");
   const [customerData, setCustomerData] = useState<{ user_id: string; name: string; email: string } | null>(null);
@@ -35,6 +36,7 @@ const FeedbackPage = () => {
 
       setCustomerData(data.customer);
       setBusinessName(data.businessName || "our business");
+      setLogoUrl(data.logoUrl || null);
       setReviewUrl(data.reviewUrl || "");
       setState("choose");
     } catch {
@@ -96,9 +98,13 @@ const FeedbackPage = () => {
         {/* Choice Step */}
         {state === "choose" && (
           <div className="bg-card border border-border rounded-2xl p-8 text-center animate-in fade-in duration-300">
-            <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
-              <Star className="w-7 h-7 text-primary" />
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt={businessName} className="w-14 h-14 rounded-2xl object-cover mx-auto mb-6" />
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
+                <Star className="w-7 h-7 text-primary" />
+              </div>
+            )}
             <h1 className="text-xl font-bold text-foreground mb-2">
               How was your experience at {businessName}?
             </h1>

@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("business_name, review_url, direct_review_url")
+      .select("business_name, review_url, direct_review_url, logo_url")
       .eq("id", customer.user_id)
       .single();
 
@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         customer: { user_id: customer.user_id, name: customer.name, email: customer.email },
         businessName: profile?.business_name || "our business",
+        logoUrl: profile?.logo_url || null,
         reviewUrl,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
