@@ -20,6 +20,7 @@ interface Customer {
 interface CustomerTableProps {
   customers: Customer[];
   isLoading: boolean;
+  onDelete?: (id: string) => void;
 }
 
 function StatusBadge({ status }: { status: "Sent" | "Pending" }) {
