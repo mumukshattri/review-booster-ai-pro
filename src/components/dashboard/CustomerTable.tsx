@@ -199,7 +199,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                           <span className="text-sm text-foreground font-medium">{c.name}</span>
                         </div>
                       </td>
-                      <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{c.email}</td>
+                      <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{maskEmail(c.email)}</td>
                       <td className="p-3 sm:p-4">
                         <StatusBadge status={c.sent_at ? "Sent" : "Pending"} />
                       </td>
