@@ -36,6 +36,7 @@ const FeedbackPage = () => {
 
       setCustomerData(data.customer);
       setBusinessName(data.businessName || "our business");
+      setLogoUrl(data.logoUrl || null);
       setReviewUrl(data.reviewUrl || "");
       setState("choose");
     } catch {
