@@ -57,7 +57,6 @@ Deno.serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open`;
-    const appUrl = Deno.env.get("APP_URL") || "https://id-preview--d23d881d-4508-446b-a2fe-10f9fb977280.lovable.app";
 
     const SEQUENCE_PROMPTS: Record<number, string> = {
       2: `Write ONE short gentle follow-up sentence (max 20 words) reminding CUSTOMER_NAME about their visit to BUSINESS_NAME and asking if they'd take a moment to leave a review. Output ONLY that one sentence.`,
@@ -129,7 +128,7 @@ Deno.serve(async (req) => {
             const aiData = await anthropicResponse.json();
             const personalizedLine = aiData.content?.[0]?.text?.trim() || `We'd love to hear about your experience at ${businessName}.`;
 
-            const feedbackPageUrl = `${appUrl}/feedback/${customer.id}`;
+            const linkUrl = reviewUrl;
             const subjectFn = SEQUENCE_SUBJECTS[step];
             const subject = subjectFn ? subjectFn(customer.name, businessName) : `${customer.name}, we'd love your feedback`;
 
@@ -138,7 +137,7 @@ Deno.serve(async (req) => {
 ${personalizedLine}
 It only takes 30 seconds:
 
-${feedbackPageUrl}
+${linkUrl}
 
 Thanks,
 ${businessName} team`;
