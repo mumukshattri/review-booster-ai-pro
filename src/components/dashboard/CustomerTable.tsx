@@ -1,4 +1,10 @@
-import { Users, MoreHorizontal, Check, Minus } from "lucide-react";
+import { Users, MoreHorizontal, Check, Minus, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { CustomerTableSkeleton } from "./CustomerTableSkeleton";
 
@@ -14,6 +20,7 @@ interface Customer {
 interface CustomerTableProps {
   customers: Customer[];
   isLoading: boolean;
+  onDelete?: (id: string) => void;
 }
 
 function StatusBadge({ status }: { status: "Sent" | "Pending" }) {
@@ -42,7 +49,7 @@ function BoolIcon({ value, color }: { value: boolean; color: string }) {
   );
 }
 
-export function CustomerTable({ customers, isLoading }: CustomerTableProps) {
+export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableProps) {
   const reducedMotion = useReducedMotion();
 
   if (isLoading) return <CustomerTableSkeleton />;
@@ -107,9 +114,22 @@ export function CustomerTable({ customers, isLoading }: CustomerTableProps) {
                       <BoolIcon value={!!c.clicked} color="bg-amber-500/20" />
                     </td>
                     <td className="p-3 sm:p-4">
-                      <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-lg hover:bg-secondary">
-                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-lg hover:bg-secondary">
+                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => onDelete?.(c.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </motion.tr>
                 ))}
