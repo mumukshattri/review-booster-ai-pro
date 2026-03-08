@@ -222,6 +222,10 @@ export default function Dashboard() {
                 {loading ? "Uploading..." : "Upload CSV"}
               </Button>
             </div>
+            <Button variant="outline" className="btn-press bg-secondary/50 border-border/50 hover:bg-secondary w-full sm:w-auto min-h-[44px]" onClick={() => setAddOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Customer
+            </Button>
             <Button variant="hero" className="btn-press min-h-[44px]" onClick={handleSendRequests} disabled={sending}>
               {sending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -231,6 +235,31 @@ export default function Dashboard() {
               {sending ? "Sending..." : "Send Review Requests"}
             </Button>
           </motion.div>
+
+          {/* Add Customer Dialog */}
+          <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add Customer</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cust-name">Name</Label>
+                  <Input id="cust-name" placeholder="John Doe" value={newName} onChange={e => setNewName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cust-email">Email</Label>
+                  <Input id="cust-email" type="email" placeholder="john@example.com" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="hero" onClick={handleAddCustomer} disabled={adding}>
+                  {adding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                  {adding ? "Adding..." : "Add Customer"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Customer Table */}
           <motion.div
