@@ -8,6 +8,7 @@ import { Logo } from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { PageTransition } from "@/components/PageTransition";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
