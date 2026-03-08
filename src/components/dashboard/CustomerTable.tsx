@@ -49,7 +49,7 @@ function BoolIcon({ value, color }: { value: boolean; color: string }) {
   );
 }
 
-export function CustomerTable({ customers, isLoading }: CustomerTableProps) {
+export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableProps) {
   const reducedMotion = useReducedMotion();
 
   if (isLoading) return <CustomerTableSkeleton />;
