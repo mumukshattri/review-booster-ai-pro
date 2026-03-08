@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, Upload, X, Zap } from "lucide-react";
+import { Save, Upload, X, Zap, Crown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PageTransition } from "@/components/PageTransition";
 import { motion } from "framer-motion";
+import { usePlan } from "@/hooks/usePlan";
+import { PLANS, PlanType } from "@/lib/plans";
 
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
@@ -20,6 +22,7 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { plan } = usePlan();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -220,26 +223,79 @@ export default function SettingsPage() {
             </Button>
           </motion.div>
 
-          {/* Subscription */}
+          {/* Subscription & Plan */}
           <motion.div
+            id="subscription"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="glass-card p-8 space-y-4"
+            className="glass-card p-8 space-y-6"
           >
-            <h2 className="text-lg font-bold text-foreground">Subscription</h2>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">Status:</span>
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${subscriptionStatus === "active" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/15 text-amber-400 border border-amber-500/20"}`}>
-                {subscriptionStatus === "active" ? "Active" : subscriptionStatus === "trial" ? "Free Trial" : subscriptionStatus}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">Your Plan</h2>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${PLANS[plan].badgeColor}`}>
+                {plan === 'agency' && <Crown className="h-3 w-3" />}
+                {PLANS[plan].name}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Your subscription is managed through Lemon Squeezy.
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(Object.entries(PLANS) as [PlanType, typeof PLANS[PlanType]][]).map(([key, cfg]) => {
+                const isCurrent = key === plan;
+                return (
+                  <div
+                    key={key}
+                    className={`rounded-xl border p-5 space-y-3 transition-all ${
+                      isCurrent
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-border/20 bg-secondary/20 hover:border-border/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-foreground">{cfg.name}</h3>
+                      <span className="text-lg font-bold text-foreground">${cfg.price}<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
+                    </div>
+                    <ul className="space-y-1.5 text-xs text-muted-foreground">
+                      <li className="flex items-center gap-1.5">
+                        <Check className="h-3 w-3 text-emerald-400" />
+                        {cfg.maxCustomers === null ? "Unlimited" : cfg.maxCustomers} customers
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <Check className={`h-3 w-3 ${cfg.hasSequence ? "text-emerald-400" : "text-muted-foreground/30"}`} />
+                        {cfg.hasSequence ? "3-email sequence" : "Single email only"}
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <Check className={`h-3 w-3 ${cfg.hasFeedback ? "text-emerald-400" : "text-muted-foreground/30"}`} />
+                        {cfg.hasFeedback ? "Feedback inbox" : "No feedback"}
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <Check className={`h-3 w-3 ${cfg.hasAiInsights ? "text-emerald-400" : "text-muted-foreground/30"}`} />
+                        {cfg.hasAiInsights ? "AI insights" : "Basic stats only"}
+                      </li>
+                      {cfg.hasPrioritySupport && (
+                        <li className="flex items-center gap-1.5">
+                          <Check className="h-3 w-3 text-emerald-400" />
+                          Priority support
+                        </li>
+                      )}
+                    </ul>
+                    {isCurrent ? (
+                      <Button variant="outline" size="sm" disabled className="w-full text-xs bg-secondary/50 border-border/30">
+                        Current Plan
+                      </Button>
+                    ) : (
+                      <Button variant="hero" size="sm" className="w-full text-xs btn-press">
+                        {key === 'starter' ? 'Downgrade' : 'Upgrade'}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Subscription managed through Lemon Squeezy. Changes take effect immediately.
             </p>
-            <Button variant="outline" className="btn-press bg-secondary/50 border-border/50 hover:bg-secondary">
-              Manage Subscription
-            </Button>
           </motion.div>
         </div>
       </PageTransition>

@@ -10,7 +10,10 @@ import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { FeedbackInbox } from "@/components/dashboard/FeedbackInbox";
 import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
 import { DashboardIntro } from "@/components/DashboardIntro";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePlan } from "@/hooks/usePlan";
+import { canAddCustomer } from "@/lib/plans";
 import confetti from "canvas-confetti";
 
 interface Customer {
@@ -38,59 +41,27 @@ export default function Dashboard() {
   const [userName, setUserName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { plan, config } = usePlan();
 
   const fetchCustomers = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      console.log("[Stats Debug] No authenticated session found, skipping fetch");
-      return;
-    }
+    if (!session?.user) return;
     const userId = session.user.id;
-    // Get user's business name for the intro
     const { data: profile } = await supabase.from("profiles").select("business_name").eq("id", userId).single();
     if (profile?.business_name) setUserName(profile.business_name);
     const { data, error } = await supabase.from("customers").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-    if (error) {
-      console.error("[Stats Debug] Fetch error:", error.message);
-      return;
-    }
-    if (data) {
-      const customers = data as Customer[];
-      const totalSent = customers.filter(c => c.sent_at).length;
-      const totalOpened = customers.filter(c => c.opened).length;
-      const totalClicked = customers.filter(c => c.clicked).length;
-      console.log("[Stats Debug] Raw counts:", {
-        totalCustomers: customers.length,
-        totalSent,
-        totalOpened,
-        totalClicked,
-        openRate: totalSent > 0 ? ((totalOpened / totalSent) * 100).toFixed(1) : 0,
-        clickRate: totalSent > 0 ? ((totalClicked / totalSent) * 100).toFixed(1) : 0,
-      });
-      setCustomers(customers);
-    }
+    if (error) return;
+    if (data) setCustomers(data as Customer[]);
     setTableLoading(false);
   }, []);
 
-  // Fetch on mount once auth is ready, and poll every 30s
   useEffect(() => {
-    // Wait for auth to be ready before first fetch
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        fetchCustomers();
-      }
+      if (session?.user) fetchCustomers();
     });
-
-    // Also try immediately in case session is already available
     fetchCustomers();
-
-    // Poll every 30 seconds
     const interval = setInterval(fetchCustomers, 30_000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearInterval(interval);
-    };
+    return () => { subscription.unsubscribe(); clearInterval(interval); };
   }, [fetchCustomers]);
 
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,6 +84,18 @@ export default function Dashboard() {
       const cols = line.split(",");
       return { user_id: user.id, name: cols[nameIdx]?.trim(), email: cols[emailIdx]?.trim() };
     }).filter(r => r.name && r.email);
+
+    // Check plan limit
+    if (config.maxCustomers !== null && customers.length + rows.length > config.maxCustomers) {
+      toast({
+        title: `Customer limit reached`,
+        description: `Your ${config.name} plan allows ${config.maxCustomers} customers. You have ${customers.length} and are trying to add ${rows.length}.`,
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.from("customers").insert(rows);
     setLoading(false);
     if (error) {
@@ -129,6 +112,15 @@ export default function Dashboard() {
       toast({ title: "Missing fields", description: "Name and email are required.", variant: "destructive" });
       return;
     }
+    // Check plan limit
+    if (!canAddCustomer(plan, customers.length)) {
+      toast({
+        title: `You've reached your ${config.maxCustomers} customer limit`,
+        description: `Upgrade to ${plan === 'starter' ? 'Pro' : 'Agency'} for more customers.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setAdding(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setAdding(false); return; }
@@ -142,15 +134,18 @@ export default function Dashboard() {
     setNewName(""); setNewEmail(""); setAddOpen(false);
     fetchCustomers();
 
-    // Auto-send if enabled
     if (inserted) {
       const { data: profile } = await supabase.from("profiles").select("auto_send_enabled").eq("id", user.id).single();
       if ((profile as any)?.auto_send_enabled) {
+        // Starter plan: single email only, no sequence
+        if (!config.hasSequence) {
+          toast({ title: "ℹ️ Sequences require Pro plan", description: "A single email will be sent instead." });
+        }
         try {
           await supabase.functions.invoke("send-review-requests", {
-            body: { customerIds: [inserted.id] },
+            body: { customerIds: [inserted.id], singleEmailOnly: !config.hasSequence },
           });
-          toast({ title: `✅ 3-email sequence started for ${newName.trim()}` });
+          toast({ title: config.hasSequence ? `✅ 3-email sequence started for ${newName.trim()}` : `✅ Email sent to ${newName.trim()}` });
           fetchCustomers();
         } catch (err: any) {
           console.error("Auto-send error:", err);
@@ -169,7 +164,7 @@ export default function Dashboard() {
     setSending(true);
     try {
       const { error } = await supabase.functions.invoke("send-review-requests", {
-        body: { customerIds: unsent.map(c => c.id) },
+        body: { customerIds: unsent.map(c => c.id), singleEmailOnly: !config.hasSequence },
       });
       if (error) throw error;
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#7c3aed', '#a855f7', '#c084fc'] });
@@ -199,9 +194,10 @@ export default function Dashboard() {
   const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0;
   const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
-  const handleIntroComplete = useCallback(() => {
-    setShowIntro(false);
-  }, []);
+  const handleIntroComplete = useCallback(() => { setShowIntro(false); }, []);
+
+  // Customer limit warning
+  const atLimit = config.maxCustomers !== null && customers.length >= config.maxCustomers;
 
   return (
     <>
@@ -213,7 +209,17 @@ export default function Dashboard() {
 
           <DashboardHeader
             onUploadClick={() => fileRef.current?.click()}
-            onAddClick={() => setAddOpen(true)}
+            onAddClick={() => {
+              if (atLimit) {
+                toast({
+                  title: `You've reached your ${config.maxCustomers} customer limit`,
+                  description: `Upgrade to ${plan === 'starter' ? 'Pro' : 'Agency'} to add more.`,
+                  variant: "destructive",
+                });
+                return;
+              }
+              setAddOpen(true);
+            }}
             onSendClick={handleSendRequests}
             loading={loading}
             sending={sending}
@@ -228,20 +234,41 @@ export default function Dashboard() {
             activeSequences={activeSequences}
           />
 
-          <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
+          {config.hasAiInsights && (
+            <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
+          )}
 
           <Tabs defaultValue="customers" className="w-full">
             <TabsList className="bg-secondary/50 border border-border/20">
-              <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Customers</TabsTrigger>
-              <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Feedback</TabsTrigger>
+              <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                Customers
+                {atLimit && (
+                  <span className="ml-2 text-[10px] font-semibold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full">
+                    {customers.length}/{config.maxCustomers}
+                  </span>
+                )}
+              </TabsTrigger>
+              {config.hasFeedback && (
+                <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Feedback</TabsTrigger>
+              )}
             </TabsList>
             <TabsContent value="customers" className="mt-4">
               <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
             </TabsContent>
-            <TabsContent value="feedback" className="mt-4">
-              <FeedbackInbox />
-            </TabsContent>
+            {config.hasFeedback ? (
+              <TabsContent value="feedback" className="mt-4">
+                <FeedbackInbox />
+              </TabsContent>
+            ) : null}
           </Tabs>
+
+          {!config.hasFeedback && (
+            <UpgradePrompt
+              title="Unlock Private Feedback"
+              description="Upgrade to Pro to capture negative feedback privately before it becomes a public review."
+              targetPlan="Pro"
+            />
+          )}
 
           <AddCustomerDialog
             open={addOpen}
