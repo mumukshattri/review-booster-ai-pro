@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, MoreHorizontal, Trash2 } from "lucide-react";
+import { Users, MoreHorizontal, Trash2, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,7 @@ interface Customer {
   clicked: boolean;
   sequence_step?: number;
   sequence_stopped?: boolean;
+  next_send_at?: string | null;
 }
 
 interface CustomerTableProps {
@@ -36,16 +37,50 @@ interface CustomerTableProps {
   onDelete?: (id: string) => void;
 }
 
+function getTimeUntil(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  const now = new Date();
+  const target = new Date(dateStr);
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs <= 0) return "Soon";
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 1) return "< 1 hour";
+  if (diffHours < 24) return `in ${diffHours}h`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `in ${diffDays}d`;
+}
+
 function SequenceBadge({ step, stopped }: { step: number; stopped: boolean }) {
   if (step === 0) return <span className="text-muted-foreground/40 text-xs">—</span>;
 
-  const labels = ["", "Email 1", "Email 2", "Email 3"];
+  if (stopped && step < 3) {
+    return (
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1">
+          {[1, 2, 3].map((s) => (
+            <span
+              key={s}
+              className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                s <= step
+                  ? "bg-primary/15 text-primary"
+                  : "bg-secondary text-muted-foreground/40"
+              }`}
+            >
+              {s <= step ? `📧 ${s} ✓` : `📧 ${s}`}
+            </span>
+          ))}
+        </div>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/15 text-destructive font-medium w-fit">
+          ⛔ Stopped
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1">
       {[1, 2, 3].map((s) => {
         const isSent = s <= step;
-        const isCurrent = s === step && !stopped && step < 3;
         return (
           <span
             key={s}
@@ -53,17 +88,12 @@ function SequenceBadge({ step, stopped }: { step: number; stopped: boolean }) {
               isSent
                 ? "bg-primary/15 text-primary"
                 : "bg-secondary text-muted-foreground/40"
-            } ${isCurrent ? "ring-1 ring-primary/30" : ""}`}
+            }`}
           >
-            {isSent ? `${labels[s]} ✓` : labels[s]}
+            {isSent ? `📧 ${s} ✓` : `📧 ${s}`}
           </span>
         );
       })}
-      {stopped && step < 3 && (
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-medium">
-          Engaged
-        </span>
-      )}
     </div>
   );
 }
@@ -123,10 +153,10 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px]">
+        <table className="w-full min-w-[800px]">
           <thead>
             <tr className="border-b border-border/20">
-              {["Name", "Email", "Status", "Sequence", "Opened", "Clicked", ""].map((h) => (
+              {["Name", "Email", "Status", "Sequence", "Next Email", "Opened", "Clicked", ""].map((h) => (
                 <th key={h || "actions"} className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em] p-3 sm:p-4">
                   {h}
                 </th>
@@ -136,7 +166,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
           <tbody>
             {customers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                <td colSpan={8} className="p-12 text-center text-muted-foreground">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
                       <Users className="h-5 w-5 text-muted-foreground/40" />
@@ -150,53 +180,71 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
               </tr>
             ) : (
               <AnimatePresence>
-                {customers.map((c, i) => (
-                  <motion.tr
-                    key={c.id}
-                    initial={reducedMotion ? {} : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.04, duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
-                    className="border-b border-border/10 transition-colors duration-150 hover:bg-secondary/40 group"
-                  >
-                    <td className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2.5">
-                        <AvatarCircle name={c.name} />
-                        <span className="text-sm text-foreground font-medium">{c.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{c.email}</td>
-                    <td className="p-3 sm:p-4">
-                      <StatusBadge status={c.sent_at ? "Sent" : "Pending"} />
-                    </td>
-                    <td className="p-3 sm:p-4">
-                      <SequenceBadge step={c.sequence_step || 0} stopped={!!c.sequence_stopped} />
-                    </td>
-                    <td className="p-3 sm:p-4">
-                      <BoolCell value={!!c.opened} />
-                    </td>
-                    <td className="p-3 sm:p-4">
-                      <BoolCell value={!!c.clicked} />
-                    </td>
-                    <td className="p-3 sm:p-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-lg hover:bg-secondary">
-                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => setDeleteTarget(c)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </motion.tr>
-                ))}
+                {customers.map((c, i) => {
+                  const step = c.sequence_step || 0;
+                  const stopped = !!c.sequence_stopped;
+                  const showNextEmail = step > 0 && step < 3 && !stopped && c.next_send_at;
+
+                  return (
+                    <motion.tr
+                      key={c.id}
+                      initial={reducedMotion ? {} : { opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04, duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
+                      className="border-b border-border/10 transition-colors duration-150 hover:bg-secondary/40 group"
+                    >
+                      <td className="p-3 sm:p-4">
+                        <div className="flex items-center gap-2.5">
+                          <AvatarCircle name={c.name} />
+                          <span className="text-sm text-foreground font-medium">{c.name}</span>
+                        </div>
+                      </td>
+                      <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{c.email}</td>
+                      <td className="p-3 sm:p-4">
+                        <StatusBadge status={c.sent_at ? "Sent" : "Pending"} />
+                      </td>
+                      <td className="p-3 sm:p-4">
+                        <SequenceBadge step={step} stopped={stopped} />
+                      </td>
+                      <td className="p-3 sm:p-4">
+                        {showNextEmail ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {getTimeUntil(c.next_send_at)}
+                          </span>
+                        ) : step >= 3 ? (
+                          <span className="text-xs text-primary font-medium">Complete ✓</span>
+                        ) : (
+                          <span className="text-muted-foreground/40 text-sm">—</span>
+                        )}
+                      </td>
+                      <td className="p-3 sm:p-4">
+                        <BoolCell value={!!c.opened} />
+                      </td>
+                      <td className="p-3 sm:p-4">
+                        <BoolCell value={!!c.clicked} />
+                      </td>
+                      <td className="p-3 sm:p-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-lg hover:bg-secondary">
+                              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => setDeleteTarget(c)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
               </AnimatePresence>
             )}
           </tbody>

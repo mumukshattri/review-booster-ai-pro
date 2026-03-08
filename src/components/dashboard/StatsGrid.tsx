@@ -1,4 +1,4 @@
-import { Mail, Eye, MousePointerClick, Users, Star, LucideIcon } from "lucide-react";
+import { Mail, Eye, MousePointerClick, Users, Star, Zap, LucideIcon } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { CountUp } from "@/components/CountUp";
 
@@ -15,9 +15,10 @@ interface StatsGridProps {
   clickRate: number;
   customersCount: number;
   reviewsSubmitted: number;
+  activeSequences: number;
 }
 
-export function StatsGrid({ totalSent, openRate, clickRate, customersCount, reviewsSubmitted }: StatsGridProps) {
+export function StatsGrid({ totalSent, openRate, clickRate, customersCount, reviewsSubmitted, activeSequences }: StatsGridProps) {
   const reducedMotion = useReducedMotion();
   const dur = reducedMotion ? 0.01 : 0.25;
   const ease = [0.33, 1, 0.68, 1] as [number, number, number, number];
@@ -27,7 +28,8 @@ export function StatsGrid({ totalSent, openRate, clickRate, customersCount, revi
     { label: "Open Rate", value: openRate, icon: Eye, suffix: "%" },
     { label: "Click Rate", value: clickRate, icon: MousePointerClick, suffix: "%" },
     { label: "Customers", value: customersCount, icon: Users, suffix: "" },
-    { label: "Reviews Submitted", value: reviewsSubmitted, icon: Star, suffix: "" },
+    { label: "Reviews", value: reviewsSubmitted, icon: Star, suffix: "" },
+    { label: "Active Sequences", value: activeSequences, icon: Zap, suffix: "" },
   ];
 
   const iconColors = [
@@ -36,10 +38,11 @@ export function StatsGrid({ totalSent, openRate, clickRate, customersCount, revi
     "text-amber-400",
     "text-sky-400",
     "text-amber-400",
+    "text-primary",
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
       {stats.map((s, i) => (
         <motion.div
           key={s.label}
