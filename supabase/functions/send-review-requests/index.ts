@@ -119,7 +119,6 @@ Deno.serve(async (req) => {
         throw new Error("Anthropic returned empty message");
       }
 
-      const emailReviewUrl = profile.direct_review_url || profile.review_url;
       const trackClickUrl = `${SUPABASE_URL}/functions/v1/track-click?cid=${customer.id}&url=${encodeURIComponent(emailReviewUrl)}`;
 
       const plainTextBody = `Hi ${customer.name},\n\nHope you enjoyed your visit to ${businessName}!\n\nWould you mind sharing your experience? It really helps us improve.\n\n${trackClickUrl}\n\nThanks,\n${businessName} team`;
