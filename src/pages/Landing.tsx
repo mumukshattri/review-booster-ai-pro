@@ -160,8 +160,10 @@ export default function Landing() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="btn-press text-base px-8 py-6 bg-secondary/50 border-border/50 hover:bg-secondary min-h-[52px]" asChild>
-              <a href="#pricing">View Pricing</a>
+            <Button variant="outline" size="lg" className="btn-press text-base px-8 py-6 bg-secondary/50 border-border/50 hover:bg-secondary min-h-[52px]"
+              onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              View Pricing
             </Button>
           </motion.div>
 
