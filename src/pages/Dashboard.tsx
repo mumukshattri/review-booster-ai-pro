@@ -7,7 +7,9 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsGrid } from "@/components/dashboard/StatsGrid";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
+import { FeedbackInbox } from "@/components/dashboard/FeedbackInbox";
 import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import confetti from "canvas-confetti";
 
 interface Customer {
