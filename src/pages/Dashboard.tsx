@@ -31,7 +31,8 @@ export default function Dashboard() {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [adding, setAdding] = useState(false);
-  const [showIntro, setShowIntro] = useState(() => !localStorage.getItem("hasSeenIntro"));
+  const [showIntro, setShowIntro] = useState(true);
+  const [userName, setUserName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -42,6 +43,9 @@ export default function Dashboard() {
       return;
     }
     const userId = session.user.id;
+    // Get user's business name for the intro
+    const { data: profile } = await supabase.from("profiles").select("business_name").eq("id", userId).single();
+    if (profile?.business_name) setUserName(profile.business_name);
     const { data, error } = await supabase.from("customers").select("*").eq("user_id", userId).order("created_at", { ascending: false });
     if (error) {
       console.error("[Stats Debug] Fetch error:", error.message);
@@ -192,13 +196,12 @@ export default function Dashboard() {
   const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
   const handleIntroComplete = useCallback(() => {
-    localStorage.setItem("hasSeenIntro", "true");
     setShowIntro(false);
   }, []);
 
   return (
     <>
-      {showIntro && <DashboardIntro onComplete={handleIntroComplete} />}
+      {showIntro && <DashboardIntro onComplete={handleIntroComplete} userName={userName} />}
       <DashboardLayout>
       <PageTransition>
         <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
