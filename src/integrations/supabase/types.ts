@@ -105,6 +105,7 @@ export type Database = {
           direct_review_url: string | null
           id: string
           logo_url: string | null
+          plan: string
           review_url: string | null
           subscription_status: string | null
           updated_at: string
@@ -116,6 +117,7 @@ export type Database = {
           direct_review_url?: string | null
           id: string
           logo_url?: string | null
+          plan?: string
           review_url?: string | null
           subscription_status?: string | null
           updated_at?: string
@@ -127,6 +129,7 @@ export type Database = {
           direct_review_url?: string | null
           id?: string
           logo_url?: string | null
+          plan?: string
           review_url?: string | null
           subscription_status?: string | null
           updated_at?: string
