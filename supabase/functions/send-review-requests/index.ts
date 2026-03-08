@@ -121,7 +121,8 @@ serve(async (req) => {
 
       // Build tracking URLs
       const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open?cid=${customer.id}`;
-      const trackClickUrl = `${SUPABASE_URL}/functions/v1/track-click?cid=${customer.id}&url=${encodeURIComponent(profile.review_url)}`;
+      const emailReviewUrl = profile.direct_review_url || profile.review_url;
+      const trackClickUrl = `${SUPABASE_URL}/functions/v1/track-click?cid=${customer.id}&url=${encodeURIComponent(emailReviewUrl)}`;
 
       const emailHtml = `
 <!DOCTYPE html>

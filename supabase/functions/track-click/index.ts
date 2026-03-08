@@ -43,11 +43,13 @@ Deno.serve(async (req) => {
       if (customer?.user_id) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("review_url")
+          .select("review_url, direct_review_url")
           .eq("id", customer.user_id)
           .single();
 
-        if (profile?.review_url) {
+        if (profile?.direct_review_url) {
+          reviewUrl = profile.direct_review_url;
+        } else if (profile?.review_url) {
           reviewUrl = profile.review_url;
         }
       }
