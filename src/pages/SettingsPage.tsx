@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, Upload, X, Zap } from "lucide-react";
+import { Save, Upload, X, Zap, Crown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PageTransition } from "@/components/PageTransition";
 import { motion } from "framer-motion";
+import { usePlan } from "@/hooks/usePlan";
+import { PLANS, PlanType } from "@/lib/plans";
 
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
