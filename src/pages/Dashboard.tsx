@@ -176,7 +176,7 @@ export default function Dashboard() {
               <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Feedback</TabsTrigger>
             </TabsList>
             <TabsContent value="customers" className="mt-4">
-              <CustomerTable customers={customers} isLoading={tableLoading} />
+              <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
             </TabsContent>
             <TabsContent value="feedback" className="mt-4">
               <FeedbackInbox />
