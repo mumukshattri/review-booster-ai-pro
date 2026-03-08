@@ -185,6 +185,7 @@ export default function Dashboard() {
   const totalSent = customers.filter(c => c.sent_at).length;
   const totalOpened = customers.filter(c => c.opened).length;
   const totalClicked = customers.filter(c => c.clicked).length;
+  const reviewsSubmitted = customers.filter(c => (c as any).reviewed).length;
   const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0;
   const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
@@ -207,6 +208,7 @@ export default function Dashboard() {
             openRate={openRate}
             clickRate={clickRate}
             customersCount={customers.length}
+            reviewsSubmitted={reviewsSubmitted}
           />
 
           <InsightCard totalSent={totalSent} monthlyGoal={100} />
