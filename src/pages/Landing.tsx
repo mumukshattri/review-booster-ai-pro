@@ -8,6 +8,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { CustomCursor } from "@/components/CustomCursor";
 import { TiltCard } from "@/components/TiltCard";
 import { PricingSection } from "@/components/landing/PricingSection";
+import { FAQSection } from "@/components/landing/FAQSection";
 import { useState } from "react";
 
 const steps = [
@@ -301,6 +302,9 @@ export default function Landing() {
 
         {/* Pricing */}
         <PricingSection dur={dur} ease={ease} />
+
+        {/* FAQ */}
+        <FAQSection dur={dur} ease={ease} />
 
         {/* Features grid */}
         <section className="container mx-auto px-4 pb-16 sm:pb-28 relative z-10">
