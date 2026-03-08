@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Upload, Send, Users, Mail, MousePointerClick, Eye, Target, Loader2 } from "lucide-react";
+import { Upload, Send, Users, Mail, MousePointerClick, Eye, Target, Loader2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { motion, useReducedMotion } from "framer-motion";
 import { CountUp } from "@/components/CountUp";
 import { PageTransition } from "@/components/PageTransition";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import confetti from "canvas-confetti";
 
 interface Customer {
@@ -22,6 +25,10 @@ export default function Dashboard() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [adding, setAdding] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const reducedMotion = useReducedMotion();
@@ -78,6 +85,28 @@ export default function Dashboard() {
       fetchCustomers();
     }
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleAddCustomer = async () => {
+    if (!newName.trim() || !newEmail.trim()) {
+      toast({ title: "Missing fields", description: "Name and email are required.", variant: "destructive" });
+      return;
+    }
+    setAdding(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setAdding(false); return; }
+    const { error } = await supabase.from("customers").insert({ user_id: user.id, name: newName.trim(), email: newEmail.trim() });
+    setAdding(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Customer added!" });
+      setNewName("");
+      setNewEmail("");
+      setAddOpen(false);
+      fetchCustomers();
+    }
+  };
   };
 
   const handleSendRequests = async () => {
@@ -193,6 +222,10 @@ export default function Dashboard() {
                 {loading ? "Uploading..." : "Upload CSV"}
               </Button>
             </div>
+            <Button variant="outline" className="btn-press bg-secondary/50 border-border/50 hover:bg-secondary w-full sm:w-auto min-h-[44px]" onClick={() => setAddOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Customer
+            </Button>
             <Button variant="hero" className="btn-press min-h-[44px]" onClick={handleSendRequests} disabled={sending}>
               {sending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -202,6 +235,31 @@ export default function Dashboard() {
               {sending ? "Sending..." : "Send Review Requests"}
             </Button>
           </motion.div>
+
+          {/* Add Customer Dialog */}
+          <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add Customer</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cust-name">Name</Label>
+                  <Input id="cust-name" placeholder="John Doe" value={newName} onChange={e => setNewName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cust-email">Email</Label>
+                  <Input id="cust-email" type="email" placeholder="john@example.com" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="hero" onClick={handleAddCustomer} disabled={adding}>
+                  {adding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                  {adding ? "Adding..." : "Add Customer"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Customer Table */}
           <motion.div
