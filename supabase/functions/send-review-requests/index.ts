@@ -157,7 +157,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: `${businessName} <onboarding@resend.dev>`,
+            from: `${businessName} <reviews@nextarcstore.in>`,
             to: [customer.email],
             subject: `${customer.name}, we'd love your feedback!`,
             html: emailHtml,
