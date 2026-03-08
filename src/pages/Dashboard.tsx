@@ -279,13 +279,6 @@ export default function Dashboard() {
             </>
           )}
 
-          {!config.hasFeedback && (
-            <UpgradePrompt
-              title="Unlock Private Feedback"
-              description="Upgrade to Pro to capture negative feedback privately before it becomes a public review."
-              targetPlan="Pro"
-            />
-          )}
 
           <AddCustomerDialog
             open={addOpen}
