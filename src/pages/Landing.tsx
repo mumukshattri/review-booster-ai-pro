@@ -170,6 +170,9 @@ export default function Landing() {
             </Button>
           </motion.div>
 
+          {/* Hero Stats */}
+          <HeroStats dur={dur} ease={ease} />
+
           {/* Floating review cards */}
           <div className="relative mt-12 sm:mt-20 max-w-4xl mx-auto">
             <motion.div
