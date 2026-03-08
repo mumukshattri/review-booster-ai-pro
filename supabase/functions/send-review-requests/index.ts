@@ -119,9 +119,11 @@ Deno.serve(async (req) => {
         throw new Error("Anthropic returned empty message");
       }
 
-      const trackClickUrl = `${SUPABASE_URL}/functions/v1/track-click?cid=${customer.id}&url=${encodeURIComponent(emailReviewUrl)}`;
+      // Point to the public feedback page instead of track-click directly
+      const appUrl = Deno.env.get("APP_URL") || "https://id-preview--d23d881d-4508-446b-a2fe-10f9fb977280.lovable.app";
+      const feedbackPageUrl = `${appUrl}/feedback/${customer.id}`;
 
-      const plainTextBody = `Hi ${customer.name},\n\nThank you for visiting ${businessName}! 🙏\n\nWe'd love to hear how we did. Your feedback helps us improve and helps others find us.\n\nTakes just 30 seconds — means the world to us! 😊\n\n⭐⭐⭐⭐⭐\n\n${trackClickUrl}\n\nSent with ❤️ by ${businessName} · You received this because you recently visited us.`;
+      const plainTextBody = `Hi ${customer.name},\n\nThank you for visiting ${businessName}! 🙏\n\nWe'd love to hear how we did. Your feedback helps us improve and helps others find us.\n\nTakes just 30 seconds — means the world to us! 😊\n\n⭐⭐⭐⭐⭐\n\n${feedbackPageUrl}\n\nSent with ❤️ by ${businessName} · You received this because you recently visited us.`;
 
       const htmlBody = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -137,7 +139,7 @@ Deno.serve(async (req) => {
 <p style="margin:0 0 24px 0;">Takes just 30 seconds — means the world to us! 😊</p>
 <p style="margin:0 0 24px 0;font-size:20px;text-align:center;">⭐⭐⭐⭐⭐</p>
 <p style="margin:0 0 24px 0;text-align:center;">
-<a href="${trackClickUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:15px;font-weight:500;">Share Your Experience ⭐</a>
+<a href="${feedbackPageUrl}" style="display:inline-block;background-color:#4F46E5;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:15px;font-weight:500;">Share Your Experience ⭐</a>
 </p>
 </td></tr>
 <tr><td style="padding:24px 32px 32px 32px;font-size:12px;color:#9ca3af;line-height:1.5;text-align:center;">Sent with ❤️ by ${businessName} · You received this because you recently visited us.</td></tr>
