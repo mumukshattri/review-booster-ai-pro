@@ -84,6 +84,14 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground">Customers will land directly on the Google review form — zero friction.</p>
               </div>
             </div>
+            <div className="flex items-center justify-between pt-2">
+              <div className="space-y-1">
+                <Label htmlFor="auto-send">Auto-send review requests</Label>
+                <p className="text-xs text-muted-foreground">Immediately send a review request when a customer is added</p>
+              </div>
+              <Switch id="auto-send" checked={autoSendEnabled} onCheckedChange={setAutoSendEnabled} />
+            </div>
+
             <Button variant="hero" className="btn-press" onClick={handleSave} disabled={loading}>
               <Save className="mr-2 h-4 w-4" />
               {loading ? "Saving..." : "Save Changes"}
