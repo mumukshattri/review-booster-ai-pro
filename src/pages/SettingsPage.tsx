@@ -29,6 +29,7 @@ export default function SettingsPage() {
         setReviewUrl(data.review_url || "");
         setDirectReviewUrl((data as any).direct_review_url || "");
         setSubscriptionStatus(data.subscription_status || "trial");
+        setAutoSendEnabled((data as any).auto_send_enabled || false);
       }
     };
     load();
