@@ -55,7 +55,7 @@ export function InsightCard({ reviewsSubmitted, monthlyGoal }: InsightCardProps)
         <p className="text-xs text-muted-foreground mt-3 relative z-10 tracking-wide">
           {goalProgress >= 100
             ? "🎉 Goal reached! Amazing work."
-            : `${Math.round(goalProgress)}% complete — ${monthlyGoal - totalSent} reviews to go`}
+            : `${Math.round(goalProgress)}% complete — ${monthlyGoal - reviewsSubmitted} reviews to go`}
         </p>
       </motion.div>
     </TiltCard>
