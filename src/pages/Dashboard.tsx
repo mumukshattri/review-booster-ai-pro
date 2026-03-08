@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -33,15 +33,56 @@ export default function Dashboard() {
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const fetchCustomers = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase.from("customers").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    if (data) setCustomers(data as Customer[]);
+  const fetchCustomers = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      console.log("[Stats Debug] No authenticated session found, skipping fetch");
+      return;
+    }
+    const userId = session.user.id;
+    const { data, error } = await supabase.from("customers").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+    if (error) {
+      console.error("[Stats Debug] Fetch error:", error.message);
+      return;
+    }
+    if (data) {
+      const customers = data as Customer[];
+      const totalSent = customers.filter(c => c.sent_at).length;
+      const totalOpened = customers.filter(c => c.opened).length;
+      const totalClicked = customers.filter(c => c.clicked).length;
+      console.log("[Stats Debug] Raw counts:", {
+        totalCustomers: customers.length,
+        totalSent,
+        totalOpened,
+        totalClicked,
+        openRate: totalSent > 0 ? ((totalOpened / totalSent) * 100).toFixed(1) : 0,
+        clickRate: totalSent > 0 ? ((totalClicked / totalSent) * 100).toFixed(1) : 0,
+      });
+      setCustomers(customers);
+    }
     setTableLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { fetchCustomers(); }, []);
+  // Fetch on mount once auth is ready, and poll every 30s
+  useEffect(() => {
+    // Wait for auth to be ready before first fetch
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchCustomers();
+      }
+    });
+
+    // Also try immediately in case session is already available
+    fetchCustomers();
+
+    // Poll every 30 seconds
+    const interval = setInterval(fetchCustomers, 30_000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(interval);
+    };
+  }, [fetchCustomers]);
 
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -144,8 +185,8 @@ export default function Dashboard() {
   const totalSent = customers.filter(c => c.sent_at).length;
   const totalOpened = customers.filter(c => c.opened).length;
   const totalClicked = customers.filter(c => c.clicked).length;
-  const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0;
-  const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0;
+  const openRate = totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0;
+  const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
   return (
     <DashboardLayout>
