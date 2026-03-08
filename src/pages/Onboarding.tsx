@@ -14,6 +14,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [businessName, setBusinessName] = useState("");
   const [reviewUrl, setReviewUrl] = useState("");
+  const [directReviewUrl, setDirectReviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
