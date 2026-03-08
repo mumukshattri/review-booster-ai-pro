@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [adding, setAdding] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => !localStorage.getItem("hasSeenIntro"));
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
