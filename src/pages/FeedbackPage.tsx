@@ -98,9 +98,13 @@ const FeedbackPage = () => {
         {/* Choice Step */}
         {state === "choose" && (
           <div className="bg-card border border-border rounded-2xl p-8 text-center animate-in fade-in duration-300">
-            <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
-              <Star className="w-7 h-7 text-primary" />
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt={businessName} className="w-14 h-14 rounded-2xl object-cover mx-auto mb-6" />
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
+                <Star className="w-7 h-7 text-primary" />
+              </div>
+            )}
             <h1 className="text-xl font-bold text-foreground mb-2">
               How was your experience at {businessName}?
             </h1>

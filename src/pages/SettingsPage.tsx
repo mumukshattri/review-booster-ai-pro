@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save } from "lucide-react";
+import { Save, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PageTransition } from "@/components/PageTransition";
@@ -16,7 +16,10 @@ export default function SettingsPage() {
   const [directReviewUrl, setDirectReviewUrl] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
   const [autoSendEnabled, setAutoSendEnabled] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,10 +33,64 @@ export default function SettingsPage() {
         setDirectReviewUrl((data as any).direct_review_url || "");
         setSubscriptionStatus(data.subscription_status || "trial");
         setAutoSendEnabled((data as any).auto_send_enabled || false);
+        setLogoUrl((data as any).logo_url || null);
       }
     };
     load();
   }, []);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please upload an image file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Image must be under 2MB", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const ext = file.name.split(".").pop();
+    const filePath = `${user.id}/logo.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("business-logos")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("business-logos")
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
+    
+    await supabase.from("profiles").update({ logo_url: publicUrl } as any).eq("id", user.id);
+    setLogoUrl(publicUrl);
+    setUploading(false);
+    toast({ title: "Logo uploaded ✓" });
+  };
+
+  const handleRemoveLogo = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Remove from storage (best effort)
+    await supabase.storage.from("business-logos").remove([`${user.id}/logo.png`, `${user.id}/logo.jpg`, `${user.id}/logo.jpeg`, `${user.id}/logo.webp`]);
+    await supabase.from("profiles").update({ logo_url: null } as any).eq("id", user.id);
+    setLogoUrl(null);
+    toast({ title: "Logo removed" });
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -70,6 +127,51 @@ export default function SettingsPage() {
           >
             <h2 className="text-lg font-bold text-foreground">Business Information</h2>
             <div className="space-y-4">
+              {/* Logo Upload */}
+              <div className="space-y-2">
+                <Label>Business Logo</Label>
+                <div className="flex items-center gap-4">
+                  {logoUrl ? (
+                    <div className="relative">
+                      <img
+                        src={logoUrl}
+                        alt="Business logo"
+                        className="w-16 h-16 rounded-xl object-cover border border-border"
+                      />
+                      <button
+                        onClick={handleRemoveLogo}
+                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-80 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl border border-dashed border-border bg-secondary/30 flex items-center justify-center">
+                      <Upload className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-secondary/50 border-border/50"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? "Uploading..." : logoUrl ? "Change Logo" : "Upload Logo"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP. Max 2MB.</p>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="business">Business Name</Label>
                 <Input id="business" value={businessName} onChange={e => setBusinessName(e.target.value)} className="bg-secondary/50 border-border/50" />
