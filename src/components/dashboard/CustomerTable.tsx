@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Users, MoreHorizontal, Check, Minus, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -5,6 +6,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { CustomerTableSkeleton } from "./CustomerTableSkeleton";
 
@@ -51,6 +62,7 @@ function BoolIcon({ value, color }: { value: boolean; color: string }) {
 
 export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableProps) {
   const reducedMotion = useReducedMotion();
+  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
 
   if (isLoading) return <CustomerTableSkeleton />;
 
@@ -123,7 +135,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => onDelete?.(c.id)}
+                            onClick={() => setDeleteTarget(c)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -138,6 +150,29 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete customer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <span className="font-medium text-foreground">{deleteTarget?.name}</span> and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) onDelete?.(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
