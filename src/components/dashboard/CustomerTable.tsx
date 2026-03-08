@@ -125,8 +125,14 @@ function BoolCell({ value }: { value: boolean | null }) {
   return <span className="text-muted-foreground/40 text-sm">—</span>;
 }
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  return `${local.charAt(0)}***@${domain}`;
+}
+
 function AvatarCircle({ name }: { name: string }) {
-  const letter = name.charAt(0).toUpperCase();
+  const letter = name.trim().charAt(0).toUpperCase();
   return (
     <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold shrink-0">
       {letter}
