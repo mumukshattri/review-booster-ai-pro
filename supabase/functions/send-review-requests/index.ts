@@ -85,43 +85,36 @@ Deno.serve(async (req) => {
       console.log("Starting email send...");
       console.log(`Calling Anthropic API for customer: ${customer.name}`);
 
-      let personalizedMessage = "";
-      try {
-        const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({
-            model: "claude-3-haiku-20240307",
-            max_tokens: 150,
-            messages: [
-              {
-                role: "user",
-                content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Output ONLY the email body text, no subject line, no greeting, no signature.`,
-              },
-            ],
-          }),
-        });
+      const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5",
+          max_tokens: 150,
+          messages: [
+            {
+              role: "user",
+              content: `Write a short friendly review request for ${customer.name} who visited ${businessName}. Keep it under 3 sentences, warm and genuine. Output ONLY the email body text, no subject line, no greeting, no signature.`,
+            },
+          ],
+        }),
+      });
 
-        if (!anthropicResponse.ok) {
-          const errorBody = await anthropicResponse.text();
-          console.error("Anthropic API error:", anthropicResponse.status, errorBody);
-          throw new Error(`Anthropic API error: ${anthropicResponse.status} - ${errorBody}`);
-        }
-
-        const aiData = await anthropicResponse.json();
-        console.log("Anthropic response:", JSON.stringify(aiData));
-        personalizedMessage = aiData.content?.[0]?.text?.trim() || "";
-      } catch (error) {
-        console.error("Anthropic error:", error);
+      if (!anthropicResponse.ok) {
+        const errorBody = await anthropicResponse.text();
+        console.error("Anthropic API error:", anthropicResponse.status, errorBody);
+        throw new Error(`Anthropic API error: ${anthropicResponse.status} - ${errorBody}`);
       }
 
+      const aiData = await anthropicResponse.json();
+      console.log("Anthropic response:", JSON.stringify(aiData));
+      const personalizedMessage = aiData.content?.[0]?.text?.trim();
       if (!personalizedMessage) {
-        console.log("Using fallback message (Anthropic failed or returned empty)");
-        personalizedMessage = `Hi ${customer.name}, thank you for choosing ${businessName}! We'd love to hear about your experience. Your feedback helps us improve and helps others discover us.`;
+        throw new Error("Anthropic returned empty message");
       }
 
       const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open?cid=${customer.id}`;
