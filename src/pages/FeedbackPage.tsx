@@ -9,6 +9,7 @@ const FeedbackPage = () => {
   const { customerId } = useParams<{ customerId: string }>();
   const [state, setState] = useState<FeedbackState>("loading");
   const [businessName, setBusinessName] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [reviewUrl, setReviewUrl] = useState("");
   const [message, setMessage] = useState("");
   const [customerData, setCustomerData] = useState<{ user_id: string; name: string; email: string } | null>(null);
