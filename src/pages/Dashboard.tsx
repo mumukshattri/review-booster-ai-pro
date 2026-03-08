@@ -150,7 +150,7 @@ export default function Dashboard() {
           await supabase.functions.invoke("send-review-requests", {
             body: { customerIds: [inserted.id] },
           });
-          toast({ title: "Review request auto-sent! 📧" });
+          toast({ title: `✅ 3-email sequence started for ${newName.trim()}` });
           fetchCustomers();
         } catch (err: any) {
           console.error("Auto-send error:", err);
