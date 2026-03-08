@@ -359,7 +359,7 @@ export default function Landing() {
         <section className="container mx-auto px-4 pb-16 sm:pb-28 relative z-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Zap, title: "Lightning Fast", desc: "Send thousands of review requests in minutes, not hours." },
+              { icon: Zap, title: "Zero Friction Reviews", desc: "Customers click one link and land directly on the review box. No searching, no clicking around — just stars and submit." },
               { icon: TrendingUp, title: "Analytics", desc: "Track opens, clicks, and reviews in real-time." },
               { icon: Shield, title: "Secure & Private", desc: "Enterprise-grade security for your customer data." },
             ].map((f, i) => (
