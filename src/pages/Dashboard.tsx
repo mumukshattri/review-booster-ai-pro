@@ -87,6 +87,28 @@ export default function Dashboard() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  const handleAddCustomer = async () => {
+    if (!newName.trim() || !newEmail.trim()) {
+      toast({ title: "Missing fields", description: "Name and email are required.", variant: "destructive" });
+      return;
+    }
+    setAdding(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setAdding(false); return; }
+    const { error } = await supabase.from("customers").insert({ user_id: user.id, name: newName.trim(), email: newEmail.trim() });
+    setAdding(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Customer added!" });
+      setNewName("");
+      setNewEmail("");
+      setAddOpen(false);
+      fetchCustomers();
+    }
+  };
+  };
+
   const handleSendRequests = async () => {
     const unsent = customers.filter(c => !c.sent_at);
     if (unsent.length === 0) {
