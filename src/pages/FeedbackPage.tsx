@@ -108,10 +108,10 @@ const FeedbackPage = () => {
             <div className="flex gap-4">
               <button
                 onClick={handlePositive}
-                className="flex-1 flex flex-col items-center gap-3 p-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all hover:scale-[1.02] cursor-pointer"
+                className="flex-1 flex flex-col items-center gap-3 p-6 rounded-2xl border border-primary/20 bg-primary/10 hover:bg-primary/20 hover:border-primary/40 transition-all hover:scale-[1.02] cursor-pointer"
               >
                 <span className="text-4xl">😊</span>
-                <span className="text-sm font-semibold text-emerald-400">It was great!</span>
+                <span className="text-sm font-semibold text-primary">It was great!</span>
               </button>
               <button
                 onClick={() => setState("form")}
