@@ -7,6 +7,7 @@ import { CountUp } from "@/components/CountUp";
 import { PageTransition } from "@/components/PageTransition";
 import { CustomCursor } from "@/components/CustomCursor";
 import { TiltCard } from "@/components/TiltCard";
+import { PricingSection } from "@/components/landing/PricingSection";
 import { useState } from "react";
 
 const steps = [
@@ -298,62 +299,8 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Pricing with 3D tilt */}
-        <section id="pricing" className="container mx-auto px-4 py-16 sm:py-28 relative z-10">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: dur * 2, ease }}
-            className="text-2xl sm:text-3xl md:text-5xl font-black text-center mb-3 sm:mb-4 tracking-tight"
-          >
-            Simple Pricing
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ delay: 0.05, duration: dur * 2, ease }}
-            className="text-muted-foreground text-center mb-12 sm:mb-20 max-w-xl mx-auto"
-          >
-            One plan. Everything included. No hidden fees.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: dur * 2.5, ease }}
-          >
-            <TiltCard className="max-w-md mx-auto glass-card p-8 sm:p-10 text-center glow-primary-intense relative overflow-hidden">
-              <div className="absolute top-4 right-4 gradient-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                MOST POPULAR
-              </div>
-
-              <div className="text-xs font-bold text-primary uppercase tracking-widest mb-4">PRO PLAN</div>
-              <div className="flex items-baseline justify-center gap-1 mb-2">
-                <span className="text-5xl sm:text-6xl font-black">$49</span>
-                <span className="text-muted-foreground text-lg">/month</span>
-              </div>
-              <p className="text-muted-foreground text-sm mb-8 sm:mb-10">
-                Everything you need to grow your reviews
-              </p>
-              <ul className="space-y-3 text-left mb-8 sm:mb-10">
-                {features.map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm">
-                    <div className="w-5 h-5 rounded-full gradient-primary flex items-center justify-center shrink-0">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
-                    <span className="text-foreground/90">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button variant="hero" size="lg" className="btn-press pulse-glow w-full text-base py-6 min-h-[52px]" asChild>
-                <Link to="/signup">Start Free Trial</Link>
-              </Button>
-              <p className="text-xs text-muted-foreground mt-4">No credit card required · Cancel anytime</p>
-            </TiltCard>
-          </motion.div>
-        </section>
+        {/* Pricing */}
+        <PricingSection dur={dur} ease={ease} />
 
         {/* Features grid */}
         <section className="container mx-auto px-4 pb-16 sm:pb-28 relative z-10">
