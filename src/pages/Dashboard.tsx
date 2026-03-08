@@ -228,35 +228,40 @@ export default function Dashboard() {
             sending={sending}
           />
 
-          <StatsGrid
-            totalSent={totalSent}
-            openRate={openRate}
-            clickRate={clickRate}
-            customersCount={customers.length}
-            reviewsSubmitted={reviewsSubmitted}
-            activeSequences={activeSequences}
-          />
+          {!tableLoading && customers.length === 0 ? (
+            <DashboardEmptyState onAddClick={() => setAddOpen(true)} />
+          ) : (
+            <>
+              <StatsGrid
+                totalSent={totalSent}
+                openRate={openRate}
+                clickRate={clickRate}
+                customersCount={customers.length}
+                reviewsSubmitted={reviewsSubmitted}
+                activeSequences={activeSequences}
+              />
 
-          {config.hasAiInsights && (
-            <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
-          )}
-
-          <Tabs defaultValue="customers" className="w-full">
-            <TabsList className="bg-secondary/50 border border-border/20">
-              <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
-                Customers
-                {atLimit && (
-                  <span className="ml-2 text-[10px] font-semibold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full">
-                    {customers.length}/{config.maxCustomers}
-                  </span>
-                )}
-              </TabsTrigger>
-              {config.hasFeedback && (
-                <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">Feedback</TabsTrigger>
+              {config.hasAiInsights && (
+                <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
               )}
-            </TabsList>
-            <TabsContent value="customers" className="mt-4">
-              <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
+
+              <Tabs defaultValue="customers" className="w-full">
+                <TabsList className="bg-secondary/50 border border-border/20 w-full sm:w-auto">
+                  <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">
+                    Customers
+                    {atLimit && (
+                      <span className="ml-2 text-[10px] font-semibold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full">
+                        {customers.length}/{config.maxCustomers}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                  {config.hasFeedback && (
+                    <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">Feedback</TabsTrigger>
+                  )}
+                </TabsList>
+                <TabsContent value="customers" className="mt-4">
+                  <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
+                </TabsContent>
             </TabsContent>
             {config.hasFeedback ? (
               <TabsContent value="feedback" className="mt-4">

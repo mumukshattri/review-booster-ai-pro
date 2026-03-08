@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { plan } = usePlan();
   const { toast } = useToast();
+  usePageTitle("Settings");
 
   useEffect(() => {
     const load = async () => {
