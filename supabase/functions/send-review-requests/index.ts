@@ -48,7 +48,7 @@ serve(async (req) => {
     // Get user profile for business info
     const { data: profile } = await supabase
       .from("profiles")
-      .select("business_name, review_url")
+      .select("business_name, review_url, direct_review_url")
       .eq("id", userId)
       .single();
 
