@@ -20,7 +20,7 @@ export default function Onboarding() {
   const { toast } = useToast();
 
   const handleStep1 = async () => {
-    if (!businessName.trim() || !reviewUrl.trim()) {
+    if (!businessName.trim() || !reviewUrl.trim() || !directReviewUrl.trim()) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
