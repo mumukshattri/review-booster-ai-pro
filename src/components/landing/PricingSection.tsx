@@ -46,6 +46,19 @@ const tiers = [
   },
 ];
 
+const comparisonRows: { feature: string; starter: boolean | string; pro: boolean | string; agency: boolean | string }[] = [
+  { feature: "Review requests / month", starter: "50", pro: "500", agency: "Unlimited" },
+  { feature: "AI-personalized emails", starter: true, pro: true, agency: true },
+  { feature: "Basic dashboard", starter: true, pro: true, agency: true },
+  { feature: "Real-time analytics", starter: false, pro: true, agency: true },
+  { feature: "CSV bulk import", starter: false, pro: true, agency: true },
+  { feature: "Multiple business locations", starter: false, pro: false, agency: true },
+  { feature: "White-label emails", starter: false, pro: false, agency: true },
+  { feature: "Advanced analytics", starter: false, pro: false, agency: true },
+  { feature: "Onboarding call", starter: false, pro: false, agency: true },
+  { feature: "Email support", starter: "Standard", pro: "Priority", agency: "Priority" },
+];
+
 interface PricingSectionProps {
   dur: number;
   ease: [number, number, number, number];
