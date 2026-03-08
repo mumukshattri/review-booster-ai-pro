@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Users, MoreHorizontal, Check, Minus, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -5,6 +6,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { CustomerTableSkeleton } from "./CustomerTableSkeleton";
 
