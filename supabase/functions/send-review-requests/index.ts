@@ -117,31 +117,10 @@ Deno.serve(async (req) => {
         throw new Error("Anthropic returned empty message");
       }
 
-      const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open?cid=${customer.id}`;
       const emailReviewUrl = profile.direct_review_url || profile.review_url;
       const trackClickUrl = `${SUPABASE_URL}/functions/v1/track-click?cid=${customer.id}&url=${encodeURIComponent(emailReviewUrl)}`;
 
-      const emailHtml = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
-    <div style="text-align:center;margin-bottom:32px;">
-      <div style="display:inline-block;width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);line-height:48px;font-size:20px;color:#fff;">★</div>
-    </div>
-    <h1 style="font-size:22px;font-weight:700;color:#1a1a1a;text-align:center;margin:0 0 8px;">How was your experience?</h1>
-    <p style="font-size:15px;color:#555;line-height:1.6;text-align:center;margin:0 0 24px;">${personalizedMessage}</p>
-    <div style="text-align:center;margin:32px 0;">
-      <a href="${trackClickUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600;font-size:15px;">Leave a Review ⭐</a>
-    </div>
-    <p style="font-size:12px;color:#999;text-align:center;margin-top:40px;">
-      You received this because you're a valued customer of ${businessName}.
-    </p>
-  </div>
-  <img src="${trackOpenUrl}" width="1" height="1" style="display:none;" alt="" />
-</body>
-</html>`;
+      const plainTextBody = `Hi ${customer.name},\n\nHope you enjoyed your visit to ${businessName}!\n\nWould you mind sharing your experience? It really helps us improve.\n\n${trackClickUrl}\n\nThanks,\n${businessName} team`;
 
       try {
         console.log("Sending email via Resend...");
@@ -154,8 +133,8 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: `${businessName} <reviews@nextarcstore.in>`,
             to: [customer.email],
-            subject: `${customer.name}, we'd love your feedback!`,
-            html: emailHtml,
+            subject: `${customer.name}, quick question about your visit`,
+            text: plainTextBody,
           }),
         });
 
