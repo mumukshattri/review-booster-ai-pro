@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { plan } = usePlan();
   const { toast } = useToast();
 
   useEffect(() => {
