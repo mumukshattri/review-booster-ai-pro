@@ -225,6 +225,7 @@ export default function Dashboard() {
             clickRate={clickRate}
             customersCount={customers.length}
             reviewsSubmitted={reviewsSubmitted}
+            activeSequences={activeSequences}
           />
 
           <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
