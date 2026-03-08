@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
             const personalizedLine = aiData.content?.[0]?.text?.trim() || `We'd love to hear about your experience at ${businessName}.`;
 
             const linkUrl = reviewUrl;
+            const subjectFn = SEQUENCE_SUBJECTS[step];
             const subject = subjectFn ? subjectFn(customer.name, businessName) : `${customer.name}, we'd love your feedback`;
 
             const plainTextBody = `Hi ${customer.name},
@@ -136,7 +137,7 @@ Deno.serve(async (req) => {
 ${personalizedLine}
 It only takes 30 seconds:
 
-${feedbackPageUrl}
+${linkUrl}
 
 Thanks,
 ${businessName} team`;
