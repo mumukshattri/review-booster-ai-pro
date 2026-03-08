@@ -7,6 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, useReducedMotion } from "framer-motion";
 import { CountUp } from "@/components/CountUp";
 import { PageTransition } from "@/components/PageTransition";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import confetti from "canvas-confetti";
 
 interface Customer {
