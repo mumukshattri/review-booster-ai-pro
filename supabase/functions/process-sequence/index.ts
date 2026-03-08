@@ -128,8 +128,7 @@ Deno.serve(async (req) => {
             const aiData = await anthropicResponse.json();
             const personalizedLine = aiData.content?.[0]?.text?.trim() || `We'd love to hear about your experience at ${businessName}.`;
 
-            const feedbackPageUrl = `${appUrl}/feedback/${customer.id}`;
-            const subjectFn = SEQUENCE_SUBJECTS[step];
+            const linkUrl = reviewUrl;
             const subject = subjectFn ? subjectFn(customer.name, businessName) : `${customer.name}, we'd love your feedback`;
 
             const plainTextBody = `Hi ${customer.name},
