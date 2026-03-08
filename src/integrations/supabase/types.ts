@@ -22,6 +22,7 @@ export type Database = {
           id: string
           name: string
           opened: boolean | null
+          reviewed: boolean | null
           sent_at: string | null
           user_id: string
         }
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           name: string
           opened?: boolean | null
+          reviewed?: boolean | null
           sent_at?: string | null
           user_id: string
         }
@@ -42,6 +44,7 @@ export type Database = {
           id?: string
           name?: string
           opened?: boolean | null
+          reviewed?: boolean | null
           sent_at?: string | null
           user_id?: string
         }
