@@ -196,7 +196,6 @@ export default function Dashboard() {
   const clickRate = totalSent > 0 ? Math.round((totalClicked / totalSent) * 1000) / 10 : 0;
 
   const handleIntroComplete = useCallback(() => {
-    localStorage.setItem("hasSeenIntro", "true");
     setShowIntro(false);
   }, []);
 
