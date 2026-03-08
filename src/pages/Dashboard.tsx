@@ -9,6 +9,7 @@ import { InsightCard } from "@/components/dashboard/InsightCard";
 import { CustomerTable } from "@/components/dashboard/CustomerTable";
 import { FeedbackInbox } from "@/components/dashboard/FeedbackInbox";
 import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
+import { DashboardIntro } from "@/components/DashboardIntro";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import confetti from "canvas-confetti";
 
