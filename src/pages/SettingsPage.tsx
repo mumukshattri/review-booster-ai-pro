@@ -25,6 +25,7 @@ export default function SettingsPage() {
       if (data) {
         setBusinessName(data.business_name || "");
         setReviewUrl(data.review_url || "");
+        setDirectReviewUrl((data as any).direct_review_url || "");
         setSubscriptionStatus(data.subscription_status || "trial");
       }
     };
