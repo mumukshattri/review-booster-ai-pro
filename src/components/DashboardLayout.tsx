@@ -9,7 +9,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar />
           <div className="flex-1 flex flex-col">
-            <header className="h-14 flex items-center border-b border-border/50 px-4">
+            <header className="h-14 flex items-center border-b border-border/30 px-4 backdrop-blur-xl bg-background/60 sticky top-0 z-40">
               <SidebarTrigger />
             </header>
             <main className="flex-1 p-6">{children}</main>

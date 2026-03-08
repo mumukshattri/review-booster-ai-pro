@@ -23,7 +23,6 @@ const items = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -32,12 +31,14 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <SidebarContent>
         <SidebarGroup>
-          <div className="flex items-center gap-2 px-4 py-4 mb-4">
-            <Star className="h-6 w-6 text-primary shrink-0" />
-            {!collapsed && <span className="text-lg font-bold text-sidebar-primary-foreground">ReviewBoost</span>}
+          <div className="flex items-center gap-2.5 px-4 py-5 mb-2">
+            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center shrink-0">
+              <Star className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+            {!collapsed && <span className="text-base font-bold text-sidebar-primary-foreground tracking-tight">ReviewBoost</span>}
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -47,7 +48,7 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-sidebar-accent"
+                      className="hover:bg-sidebar-accent transition-colors duration-200"
                       activeClassName="bg-sidebar-accent text-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
@@ -61,7 +62,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-3">
-        <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
+        <Button variant="ghost" className="btn-press w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           {!collapsed && "Log out"}
         </Button>

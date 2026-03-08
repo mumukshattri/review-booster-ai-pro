@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PageTransition } from "@/components/PageTransition";
+import { motion } from "framer-motion";
 
 export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
@@ -40,52 +42,64 @@ export default function SettingsPage() {
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Settings saved" });
+      toast({ title: "Settings saved ✓" });
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground text-sm">Manage your business info and subscription</p>
-        </div>
-
-        <div className="glass-card p-8 space-y-6">
-          <h2 className="text-lg font-semibold text-foreground">Business Information</h2>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="business">Business Name</Label>
-              <Input id="business" value={businessName} onChange={e => setBusinessName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="review-url">Google Review URL</Label>
-              <Input id="review-url" value={reviewUrl} onChange={e => setReviewUrl(e.target.value)} />
-            </div>
+      <PageTransition>
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+            <p className="text-muted-foreground text-sm">Manage your business info and subscription</p>
           </div>
-          <Button variant="hero" onClick={handleSave} disabled={loading}>
-            <Save className="mr-2 h-4 w-4" />
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
 
-        <div className="glass-card p-8 space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Subscription</h2>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">Status:</span>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${subscriptionStatus === "active" ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
-              {subscriptionStatus === "active" ? "Active" : subscriptionStatus === "trial" ? "Free Trial" : subscriptionStatus}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Your subscription is managed through Lemon Squeezy.
-          </p>
-          <Button variant="outline">
-            Manage Subscription
-          </Button>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="glass-card p-8 space-y-6"
+          >
+            <h2 className="text-lg font-bold text-foreground">Business Information</h2>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="business">Business Name</Label>
+                <Input id="business" value={businessName} onChange={e => setBusinessName(e.target.value)} className="bg-secondary/50 border-border/50" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="review-url">Google Review URL</Label>
+                <Input id="review-url" value={reviewUrl} onChange={e => setReviewUrl(e.target.value)} className="bg-secondary/50 border-border/50" />
+              </div>
+            </div>
+            <Button variant="hero" className="btn-press" onClick={handleSave} disabled={loading}>
+              <Save className="mr-2 h-4 w-4" />
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="glass-card p-8 space-y-4"
+          >
+            <h2 className="text-lg font-bold text-foreground">Subscription</h2>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">Status:</span>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${subscriptionStatus === "active" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/15 text-amber-400 border border-amber-500/20"}`}>
+                {subscriptionStatus === "active" ? "Active" : subscriptionStatus === "trial" ? "Free Trial" : subscriptionStatus}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Your subscription is managed through Lemon Squeezy.
+            </p>
+            <Button variant="outline" className="btn-press bg-secondary/50 border-border/50 hover:bg-secondary">
+              Manage Subscription
+            </Button>
+          </motion.div>
         </div>
-      </div>
+      </PageTransition>
     </DashboardLayout>
   );
 }
