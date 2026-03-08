@@ -51,7 +51,7 @@ function getTimeUntil(dateStr: string | null | undefined): string {
 }
 
 function SequenceBadge({ step, stopped }: { step: number; stopped: boolean }) {
-  if (step === 0) return <span className="text-muted-foreground/40 text-xs">—</span>;
+  if (step === 0) return <span className="text-muted-foreground/40 text-[10px] px-1.5 py-0.5 rounded bg-secondary font-medium">Legacy</span>;
 
   if (stopped && step < 3) {
     return (
@@ -125,8 +125,14 @@ function BoolCell({ value }: { value: boolean | null }) {
   return <span className="text-muted-foreground/40 text-sm">—</span>;
 }
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  return `${local.charAt(0)}***@${domain}`;
+}
+
 function AvatarCircle({ name }: { name: string }) {
-  const letter = name.charAt(0).toUpperCase();
+  const letter = name.trim().charAt(0).toUpperCase();
   return (
     <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold shrink-0">
       {letter}
@@ -199,7 +205,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                           <span className="text-sm text-foreground font-medium">{c.name}</span>
                         </div>
                       </td>
-                      <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{c.email}</td>
+                      <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{maskEmail(c.email)}</td>
                       <td className="p-3 sm:p-4">
                         <StatusBadge status={c.sent_at ? "Sent" : "Pending"} />
                       </td>
