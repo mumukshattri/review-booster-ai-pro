@@ -39,6 +39,7 @@ export default function SettingsPage() {
     const { error } = await supabase.from("profiles").update({
       business_name: businessName,
       review_url: reviewUrl,
+      direct_review_url: directReviewUrl,
     }).eq("id", user.id);
     setLoading(false);
     if (error) {
