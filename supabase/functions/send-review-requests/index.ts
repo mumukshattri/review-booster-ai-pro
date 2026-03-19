@@ -105,28 +105,27 @@ Deno.serve(async (req) => {
         .replace("CUSTOMER_NAME", customer.name)
         .replace("BUSINESS_NAME", businessName);
 
-      const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "claude-haiku-4-5",
+          model: "google/gemini-2.5-flash-lite",
           max_tokens: 100,
           messages: [{ role: "user", content: prompt }],
         }),
       });
 
-      if (!anthropicResponse.ok) {
-        const errorBody = await anthropicResponse.text();
-        console.error("Anthropic API error:", anthropicResponse.status, errorBody);
-        throw new Error(`Anthropic API error: ${anthropicResponse.status}`);
+      if (!aiResponse.ok) {
+        const errorBody = await aiResponse.text();
+        console.error("AI gateway error:", aiResponse.status, errorBody);
+        throw new Error(`AI gateway error: ${aiResponse.status}`);
       }
 
-      const aiData = await anthropicResponse.json();
-      const personalizedLine = aiData.content?.[0]?.text?.trim() || `We'd love to hear about your experience at ${businessName}.`;
+      const aiData = await aiResponse.json();
+      const personalizedLine = aiData.choices?.[0]?.message?.content?.trim() || `We'd love to hear about your experience at ${businessName}.`;
 
       const linkUrl = reviewUrl;
 
