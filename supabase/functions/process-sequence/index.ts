@@ -50,9 +50,9 @@ Deno.serve(async (req) => {
     }
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!RESEND_API_KEY || !ANTHROPIC_API_KEY) {
-      throw new Error("Missing RESEND_API_KEY or ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!RESEND_API_KEY || !LOVABLE_API_KEY) {
+      throw new Error("Missing RESEND_API_KEY or LOVABLE_API_KEY");
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
