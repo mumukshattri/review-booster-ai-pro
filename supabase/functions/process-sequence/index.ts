@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       .select("id, user_id, sequence_step")
       .eq("sequence_stopped", false)
       .lt("next_send_at", now)
-      .gt("sequence_step", 0)
+      .gte("sequence_step", 0) // Changed to allow step 0 (scheduled first email)
       .lt("sequence_step", 3);
 
     if (error) {
@@ -59,11 +59,13 @@ Deno.serve(async (req) => {
     const trackOpenUrl = `${SUPABASE_URL}/functions/v1/track-open`;
 
     const SEQUENCE_PROMPTS: Record<number, string> = {
+      1: `Write ONE short friendly sentence (max 20 words) thanking CUSTOMER_NAME for visiting BUSINESS_NAME and asking them to share their experience. Warm first-time tone. Output ONLY that one sentence.`,
       2: `Write ONE short gentle follow-up sentence (max 20 words) reminding CUSTOMER_NAME about their visit to BUSINESS_NAME and asking if they'd take a moment to leave a review. Output ONLY that one sentence.`,
       3: `Write ONE short final friendly nudge sentence (max 20 words) for CUSTOMER_NAME about BUSINESS_NAME, mentioning this is a last reminder to share their experience. Output ONLY that one sentence.`,
     };
 
     const SEQUENCE_SUBJECTS: Record<number, (name: string, biz: string) => string> = {
+      1: (name) => `${name}, how was your visit?`,
       2: (_name, biz) => `Still thinking about ${biz}?`,
       3: (name) => `Last chance to share your experience, ${name}`,
     };
@@ -141,13 +143,6 @@ ${linkUrl}
 Thanks,
 ${businessName} team`;
 
-            const htmlBody = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:20px;font-family:sans-serif;font-size:14px;color:#222;">
-<pre style="white-space:pre-wrap;font-family:inherit;font-size:inherit;margin:0;">${plainTextBody}</pre>
-<img src="${trackOpenUrl}?cid=${customer.id}" width="1" height="1" style="display:none;" alt="" />
-</body></html>`;
-
             const sendResp = await fetch("https://api.resend.com/emails", {
               method: "POST",
               headers: {
@@ -158,7 +153,6 @@ ${businessName} team`;
                 from: `${businessName} <reviews@nextarcstore.in>`,
                 to: [customer.email],
                 subject,
-                html: htmlBody,
                 text: plainTextBody,
               }),
             });
@@ -172,7 +166,11 @@ ${businessName} team`;
 
             // Update sequence tracking
             let nextSendAt: string | null = null;
-            if (step === 2) {
+            if (step === 1) {
+              const d = new Date();
+              d.setDate(d.getDate() + 3);
+              nextSendAt = d.toISOString();
+            } else if (step === 2) {
               const d = new Date();
               d.setDate(d.getDate() + 4);
               nextSendAt = d.toISOString();
@@ -181,6 +179,7 @@ ${businessName} team`;
             await supabase
               .from("customers")
               .update({
+                sent_at: step === 1 ? new Date().toISOString() : customer.sent_at,
                 sequence_step: step,
                 next_send_at: nextSendAt,
                 sequence_stopped: step >= 3,

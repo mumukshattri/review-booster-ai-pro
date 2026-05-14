@@ -11,11 +11,13 @@ interface AddCustomerDialogProps {
   email: string;
   onNameChange: (v: string) => void;
   onEmailChange: (v: string) => void;
+  scheduledFor: string;
+  onScheduledForChange: (v: string) => void;
   onSubmit: () => void;
   adding: boolean;
 }
 
-export function AddCustomerDialog({ open, onOpenChange, name, email, onNameChange, onEmailChange, onSubmit, adding }: AddCustomerDialogProps) {
+export function AddCustomerDialog({ open, onOpenChange, name, email, scheduledFor, onNameChange, onEmailChange, onScheduledForChange, onSubmit, adding }: AddCustomerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -31,6 +33,11 @@ export function AddCustomerDialog({ open, onOpenChange, name, email, onNameChang
           <div className="space-y-2">
             <Label htmlFor="cust-email">Email</Label>
             <Input id="cust-email" type="email" placeholder="john@example.com" value={email} onChange={e => onEmailChange(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cust-schedule">Schedule first email (IST)</Label>
+            <Input id="cust-schedule" type="datetime-local" value={scheduledFor} onChange={e => onScheduledForChange(e.target.value)} />
+            <p className="text-xs text-muted-foreground">Leave empty to send immediately.</p>
           </div>
         </div>
         <DialogFooter>

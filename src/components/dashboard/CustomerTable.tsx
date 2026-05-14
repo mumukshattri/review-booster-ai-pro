@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, MoreHorizontal, Trash2, Clock } from "lucide-react";
+import { Users, MoreHorizontal, Trash2, Clock, XCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +35,7 @@ interface CustomerTableProps {
   customers: Customer[];
   isLoading: boolean;
   onDelete?: (id: string) => void;
+  onCancelSchedule?: (id: string) => void;
 }
 
 function getTimeUntil(dateStr: string | null | undefined): string {
@@ -98,7 +99,16 @@ function SequenceBadge({ step, stopped }: { step: number; stopped: boolean }) {
   );
 }
 
-function StatusBadge({ status }: { status: "Sent" | "Pending" }) {
+function StatusBadge({ status }: { status: "Sent" | "Pending" | "Scheduled" }) {
+  if (status === "Scheduled") {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-500">
+        <Clock className="w-3 h-3" />
+        Scheduled
+      </span>
+    );
+  }
+
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
       status === "Sent"
@@ -140,7 +150,7 @@ function AvatarCircle({ name }: { name: string }) {
   );
 }
 
-export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableProps) {
+export function CustomerTable({ customers, isLoading, onDelete, onCancelSchedule }: CustomerTableProps) {
   const reducedMotion = useReducedMotion();
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
 
@@ -189,6 +199,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                 {customers.map((c, i) => {
                   const step = c.sequence_step || 0;
                   const stopped = !!c.sequence_stopped;
+                  const isScheduledFirst = step === 0 && !!c.next_send_at;
                   const showNextEmail = step > 0 && step < 3 && !stopped && c.next_send_at;
 
                   return (
@@ -207,7 +218,7 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                       </td>
                       <td className="p-3 sm:p-4 text-xs text-muted-foreground font-mono">{maskEmail(c.email)}</td>
                       <td className="p-3 sm:p-4">
-                        <StatusBadge status={c.sent_at ? "Sent" : "Pending"} />
+                        <StatusBadge status={c.sent_at ? "Sent" : isScheduledFirst ? "Scheduled" : "Pending"} />
                       </td>
                       <td className="p-3 sm:p-4">
                         <SequenceBadge step={step} stopped={stopped} />
@@ -216,6 +227,10 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                         {showNextEmail ? (
                           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
+                            {getTimeUntil(c.next_send_at)}
+                          </span>
+                        ) : isScheduledFirst ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-amber-500 font-medium">
                             {getTimeUntil(c.next_send_at)}
                           </span>
                         ) : step >= 3 ? (
@@ -238,6 +253,14 @@ export function CustomerTable({ customers, isLoading, onDelete }: CustomerTableP
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {isScheduledFirst && (
+                              <DropdownMenuItem
+                                onClick={() => onCancelSchedule?.(c.id)}
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Cancel Schedule
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
                               onClick={() => setDeleteTarget(c)}

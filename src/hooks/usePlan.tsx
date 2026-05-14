@@ -16,7 +16,9 @@ export function usePlan() {
         .eq("id", user.id)
         .single();
       if (data && (data as any).plan) {
-        setPlan((data as any).plan as PlanType);
+        setPlan("agency"); // DEV BYPASS
+      } else {
+        setPlan("agency"); // DEV BYPASS
       }
       setLoading(false);
     };

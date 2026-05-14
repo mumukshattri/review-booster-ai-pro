@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Check, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 import { TiltCard } from "@/components/TiltCard";
@@ -66,6 +66,26 @@ interface PricingSectionProps {
 
 export function PricingSection({ dur, ease }: PricingSectionProps) {
   const [annual, setAnnual] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email) setUserEmail(data.user.email);
+    });
+  }, []);
+
+  const getCheckoutUrl = (tierName: string) => {
+    let variantId = "";
+    if (tierName === "STARTER") variantId = "1398674";
+    if (tierName === "PRO") variantId = "1399999";
+    if (tierName === "AGENCY") variantId = "1399966";
+
+    let url = `https://getreviewboost.lemonsqueezy.com/checkout/buy/${variantId}`;
+    if (userEmail) {
+      url += `?checkout[email]=${encodeURIComponent(userEmail)}`;
+    }
+    return url;
+  };
 
   return (
     <section id="pricing" className="container mx-auto px-4 py-16 sm:py-28 relative z-10">
@@ -134,11 +154,10 @@ export function PricingSection({ dur, ease }: PricingSectionProps) {
               className={tier.popular ? "md:-my-4 relative z-10" : ""}
             >
               <CardWrapper
-                className={`glass-card p-7 sm:p-9 text-center relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                  tier.popular
+                className={`glass-card p-7 sm:p-9 text-center relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${tier.popular
                     ? "glow-primary-intense border-primary/30 md:py-11"
                     : "opacity-80 hover:opacity-100"
-                }`}
+                  }`}
               >
                 {tier.popular && (
                   <div className="absolute top-4 right-4 gradient-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
@@ -166,9 +185,8 @@ export function PricingSection({ dur, ease }: PricingSectionProps) {
                 <ul className="space-y-3 text-left mb-7 sm:mb-8">
                   {tier.features.map((f, j) => (
                     <li key={j} className="flex items-center gap-3 text-sm">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                        tier.popular ? "gradient-primary" : "bg-muted"
-                      }`}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${tier.popular ? "gradient-primary" : "bg-muted"
+                        }`}>
                         <Check className={`h-3 w-3 ${tier.popular ? "text-primary-foreground" : "text-foreground"}`} />
                       </div>
                       <span className="text-foreground/90">{f}</span>
@@ -178,14 +196,13 @@ export function PricingSection({ dur, ease }: PricingSectionProps) {
                 <Button
                   variant={tier.popular ? "hero" : "outline"}
                   size="lg"
-                  className={`btn-press w-full text-base py-6 min-h-[52px] ${
-                    tier.popular ? "pulse-glow" : "bg-secondary/50 border-border/50 hover:bg-secondary"
-                  }`}
-                  asChild
+                  className={`btn-press w-full text-base py-6 min-h-[52px] ${tier.popular ? "pulse-glow" : "bg-secondary/50 border-border/50 hover:bg-secondary"
+                    }`}
+                  onClick={() => {
+                    window.location.href = getCheckoutUrl(tier.name);
+                  }}
                 >
-                  <Link to="/signup">
-                    {tier.popular ? "Start Free Trial" : "Get Started"}
-                  </Link>
+                  {tier.popular ? "Start Free Trial" : "Get Started"}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-4">
                   No credit card required

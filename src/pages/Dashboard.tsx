@@ -12,10 +12,12 @@ import { AddCustomerDialog } from "@/components/dashboard/AddCustomerDialog";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardIntro } from "@/components/DashboardIntro";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePlan } from "@/hooks/usePlan";
+import { PlanType } from "@/lib/plans";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { canAddCustomer } from "@/lib/plans";
+import { canSendRequest } from "@/lib/plans";
 import confetti from "canvas-confetti";
 
 interface Customer {
@@ -41,10 +43,18 @@ export default function Dashboard() {
   const [adding, setAdding] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [userName, setUserName] = useState("");
+  const [scheduledFor, setScheduledFor] = useState("");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState("");
+  const [upgradePlan, setUpgradePlan] = useState<PlanType>("pro");
+  const [activeTab, setActiveTab] = useState("customers");
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { plan, config } = usePlan();
   usePageTitle("Dashboard");
+
+  const currentMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const monthlySentCount = customers.filter(c => c.sent_at && c.sent_at >= currentMonthStart).length;
 
   const fetchCustomers = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -68,14 +78,25 @@ export default function Dashboard() {
   }, [fetchCustomers]);
 
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Check plan gating first
+    if (!config.hasCsvImport) {
+      setUpgradeFeature("CSV bulk upload");
+      setUpgradePlan("pro");
+      setUpgradeOpen(true);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
     const text = await file.text();
     const lines = text.trim().split("\n");
-    const header = lines[0].toLowerCase();
-    const nameIdx = header.split(",").findIndex(h => h.trim() === "name");
-    const emailIdx = header.split(",").findIndex(h => h.trim() === "email");
+    const header = lines[0].toLowerCase().replace(/['"\r]/g, '');
+    const headers = header.split(",").map(h => h.trim());
+    const nameIdx = headers.findIndex(h => h === "name" || h === "first name" || h === "firstname");
+    const emailIdx = headers.findIndex(h => h === "email" || h === "email address");
+
     if (nameIdx === -1 || emailIdx === -1) {
       toast({ title: "Invalid CSV", description: "CSV must have 'name' and 'email' columns", variant: "destructive" });
       setLoading(false);
@@ -84,20 +105,10 @@ export default function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const rows = lines.slice(1).map(line => {
-      const cols = line.split(",");
+      const cleanLine = line.replace(/['"\r]/g, '');
+      const cols = cleanLine.split(",");
       return { user_id: user.id, name: cols[nameIdx]?.trim(), email: cols[emailIdx]?.trim() };
     }).filter(r => r.name && r.email);
-
-    // Check plan limit
-    if (config.maxCustomers !== null && customers.length + rows.length > config.maxCustomers) {
-      toast({
-        title: `Customer limit reached`,
-        description: `Your ${config.name} plan allows ${config.maxCustomers} customers. You have ${customers.length} and are trying to add ${rows.length}.`,
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
 
     const { error } = await supabase.from("customers").insert(rows);
     setLoading(false);
@@ -113,15 +124,6 @@ export default function Dashboard() {
   const handleAddCustomer = async () => {
     if (!newName.trim() || !newEmail.trim()) {
       toast({ title: "Missing fields", description: "Name and email are required.", variant: "destructive" });
-      return;
-    }
-    // Check plan limit
-    if (!canAddCustomer(plan, customers.length)) {
-      toast({
-        title: `You've reached your ${config.maxCustomers} customer limit`,
-        description: `Upgrade to ${plan === 'starter' ? 'Pro' : 'Agency'} for more customers.`,
-        variant: "destructive",
-      });
       return;
     }
     setAdding(true);
@@ -140,18 +142,23 @@ export default function Dashboard() {
     if (inserted) {
       const { data: profile } = await supabase.from("profiles").select("auto_send_enabled").eq("id", user.id).single();
       if ((profile as any)?.auto_send_enabled) {
-        // Starter plan: single email only, no sequence
-        if (!config.hasSequence) {
-          toast({ title: "ℹ️ Sequences require Pro plan", description: "A single email will be sent instead." });
-        }
-        try {
-          await supabase.functions.invoke("send-review-requests", {
-            body: { customerIds: [inserted.id], singleEmailOnly: !config.hasSequence },
-          });
-          toast({ title: config.hasSequence ? `✅ 3-email sequence started for ${newName.trim()}` : `✅ Email sent to ${newName.trim()}` });
-          fetchCustomers();
-        } catch (err: any) {
-          console.error("Auto-send error:", err);
+        if (!canSendRequest(plan, monthlySentCount, 1)) {
+           toast({ title: "Monthly limit reached", description: `You have reached your limit of ${config.maxRequestsPerMonth} review requests this month.`, variant: "destructive" });
+        } else {
+          // Starter plan: single email only, no sequence
+          if (!config.hasSequence) {
+            toast({ title: "ℹ️ Sequences require Pro plan", description: "A single email will be sent instead." });
+          }
+          try {
+            await supabase.functions.invoke("send-review-requests", {
+              body: { customerIds: [inserted.id], singleEmailOnly: !config.hasSequence, scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null },
+            });
+            toast({ title: config.hasSequence ? `✅ 3-email sequence started for ${newName.trim()}` : `✅ Email sent to ${newName.trim()}` });
+            setScheduledFor("");
+            fetchCustomers();
+          } catch (err: any) {
+            console.error("Auto-send error:", err);
+          }
         }
       }
     }
@@ -164,6 +171,14 @@ export default function Dashboard() {
       toast({ title: "No unsent customers", description: "All customers already have requests sent." });
       return;
     }
+
+    if (!canSendRequest(plan, monthlySentCount, unsent.length)) {
+      setUpgradeFeature(`Sending ${unsent.length} more requests (Limit: ${config.maxRequestsPerMonth}/mo)`);
+      setUpgradePlan(plan === 'free' ? 'starter' : plan === 'starter' ? 'pro' : 'agency');
+      setUpgradeOpen(true);
+      return;
+    }
+
     setSending(true);
     try {
       const { error } = await supabase.functions.invoke("send-review-requests", {
@@ -180,12 +195,22 @@ export default function Dashboard() {
   };
 
   const handleDeleteCustomer = async (id: string) => {
-    const { error } = await supabase.from("customers").delete().eq("id", id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from("customers").delete().eq("id", id).eq("user_id", user.id);
     if (error) {
       toast({ title: "Error deleting", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Customer deleted" });
       setCustomers(prev => prev.filter(c => c.id !== id));
+    }
+  };
+
+  const handleCancelSchedule = async (id: string) => {
+    const { error } = await supabase.from("customers").update({ next_send_at: null, sequence_step: 0 }).eq("id", id);
+    if (!error) {
+      toast({ title: "Schedule cancelled", description: "Customer reset to pending status." });
+      fetchCustomers();
     }
   };
 
@@ -199,99 +224,141 @@ export default function Dashboard() {
 
   const handleIntroComplete = useCallback(() => { setShowIntro(false); }, []);
 
-  // Customer limit warning
-  const atLimit = config.maxCustomers !== null && customers.length >= config.maxCustomers;
+  const handleTabChange = (val: string) => {
+    if (val === "feedback" && !config.hasFeedback) {
+      setUpgradeFeature("Private feedback inbox");
+      setUpgradePlan("pro");
+      setUpgradeOpen(true);
+      return;
+    }
+    setActiveTab(val);
+  };
+
+  // Monthly requests limit warning
+  const atLimit = config.maxRequestsPerMonth !== null && monthlySentCount >= config.maxRequestsPerMonth;
 
   return (
     <>
       {showIntro && <DashboardIntro onComplete={handleIntroComplete} userName={userName} />}
       <DashboardLayout>
-      <PageTransition>
-        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
-          <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
+        <PageTransition>
+          <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
+            {plan === "free" && (
+              <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-sm text-foreground">
+                  You are on the <strong>Free</strong> plan. Upgrade to send more reviews!
+                </p>
+                <div onClick={() => {
+                  setUpgradeFeature("Sending more reviews");
+                  setUpgradePlan("starter");
+                  setUpgradeOpen(true);
+                }} className="bg-primary text-primary-foreground text-sm px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition cursor-pointer whitespace-nowrap">
+                  Upgrade &rarr;
+                </div>
+              </div>
+            )}
+            <div className="flex justify-end mb-2">
+              <button onClick={async () => {
+                const { error } = await supabase.functions.invoke("process-sequence");
+                if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+                else { toast({ title: "Sequence processed!" }); fetchCustomers(); }
+              }} className="bg-emerald-500/20 text-emerald-500 text-xs px-3 py-1.5 rounded-md font-bold hover:bg-emerald-500/30">
+                [DEV] Run Email Scheduler
+              </button>
+            </div>
 
-          <DashboardHeader
-            onUploadClick={() => fileRef.current?.click()}
-            onAddClick={() => {
-              if (atLimit) {
-                toast({
-                  title: `You've reached your ${config.maxCustomers} customer limit`,
-                  description: `Upgrade to ${plan === 'starter' ? 'Pro' : 'Agency'} to add more.`,
-                  variant: "destructive",
-                });
-                return;
-              }
-              setAddOpen(true);
-            }}
-            onSendClick={handleSendRequests}
-            loading={loading}
-            sending={sending}
-          />
+            {config.maxRequestsPerMonth !== null && (
+              <div className="bg-secondary/30 border border-border/30 rounded-xl p-4 flex justify-between items-center">
+                <span className="text-sm text-muted-foreground font-medium">Monthly Send Usage</span>
+                <span className="text-sm font-bold text-foreground">
+                  {monthlySentCount} / {config.maxRequestsPerMonth} requests sent
+                </span>
+              </div>
+            )}
 
-          {!tableLoading && customers.length === 0 ? (
-            <DashboardEmptyState onAddClick={() => setAddOpen(true)} />
-          ) : (
-            <>
-              <StatsGrid
-                totalSent={totalSent}
-                openRate={openRate}
-                clickRate={clickRate}
-                customersCount={customers.length}
-                reviewsSubmitted={reviewsSubmitted}
-                activeSequences={activeSequences}
-              />
+            <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
 
-              {config.hasAiInsights && (
-                <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
-              )}
+            <DashboardHeader
+              onUploadClick={() => fileRef.current?.click()}
+              onAddClick={() => {
+                setAddOpen(true);
+              }}
+              onSendClick={handleSendRequests}
+              loading={loading}
+              sending={sending}
+            />
 
-              <Tabs defaultValue="customers" className="w-full">
-                <TabsList className="bg-secondary/50 border border-border/20 w-full sm:w-auto">
-                  <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">
-                    Customers
-                    {atLimit && (
-                      <span className="ml-2 text-[10px] font-semibold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full">
-                        {customers.length}/{config.maxCustomers}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                  {config.hasFeedback && (
-                    <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">Feedback</TabsTrigger>
-                  )}
-                </TabsList>
-                <TabsContent value="customers" className="mt-4">
-                  <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} />
-                </TabsContent>
-                {config.hasFeedback ? (
+            {!tableLoading && customers.length === 0 ? (
+              <DashboardEmptyState onAddClick={() => setAddOpen(true)} />
+            ) : (
+              <>
+                <StatsGrid
+                  totalSent={totalSent}
+                  openRate={openRate}
+                  clickRate={clickRate}
+                  customersCount={customers.length}
+                  reviewsSubmitted={reviewsSubmitted}
+                  activeSequences={activeSequences}
+                />
+
+                {config.hasAiInsights && (
+                  <InsightCard reviewsSubmitted={reviewsSubmitted} monthlyGoal={100} />
+                )}
+
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                  <TabsList className="bg-secondary/50 border border-border/20 w-full sm:w-auto">
+                    <TabsTrigger value="customers" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">
+                      Customers
+                      {atLimit && (
+                        <span className="ml-2 text-[10px] font-semibold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full">
+                          {monthlySentCount}/{config.maxRequestsPerMonth}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="feedback" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary flex-1 sm:flex-none">
+                      Feedback
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="customers" className="mt-4">
+                    <CustomerTable customers={customers} isLoading={tableLoading} onDelete={handleDeleteCustomer} onCancelSchedule={handleCancelSchedule} />
+                  </TabsContent>
                   <TabsContent value="feedback" className="mt-4">
                     <FeedbackInbox />
                   </TabsContent>
-                ) : null}
-              </Tabs>
+                </Tabs>
 
-              {!config.hasFeedback && (
-                <UpgradePrompt
-                  title="Unlock Private Feedback"
-                  description="Upgrade to Pro to capture negative feedback privately before it becomes a public review."
-                  targetPlan="Pro"
-                />
-              )}
-            </>
-          )}
+                {!config.hasFeedback && (
+                  <UpgradePrompt
+                    title="Unlock Private Feedback"
+                    description="Upgrade to Pro to capture negative feedback privately before it becomes a public review."
+                    targetPlan="pro"
+                  />
+                )}
+              </>
+            )}
+
+            <UpgradeModal
+              open={upgradeOpen}
+              onOpenChange={setUpgradeOpen}
+              featureName={upgradeFeature}
+              requiredPlan={upgradePlan}
+            />
 
 
-          <AddCustomerDialog
-            open={addOpen}
-            onOpenChange={setAddOpen}
-            name={newName}
-            email={newEmail}
-            onNameChange={setNewName}
-            onEmailChange={setNewEmail}
-            onSubmit={handleAddCustomer}
-            adding={adding}
-          />
-        </div>
-      </PageTransition>
+            <AddCustomerDialog
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              name={newName}
+              email={newEmail}
+              scheduledFor={scheduledFor}
+              onNameChange={setNewName}
+              onEmailChange={setNewEmail}
+              onScheduledForChange={setScheduledFor}
+              onSubmit={handleAddCustomer}
+              adding={adding}
+            />
+          </div>
+        </PageTransition>
       </DashboardLayout>
     </>
   );

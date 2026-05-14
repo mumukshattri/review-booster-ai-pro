@@ -1,63 +1,80 @@
-export type PlanType = 'starter' | 'pro' | 'agency';
+export type PlanType = 'free' | 'starter' | 'pro' | 'agency';
 
 export interface PlanConfig {
   name: string;
-  maxCustomers: number | null; // null = unlimited
+  maxRequestsPerMonth: number | null; // null = unlimited
   hasSequence: boolean;
   hasFeedback: boolean;
   hasAiInsights: boolean;
   hasSentimentFilter: boolean;
   hasMultiLocation: boolean;
   hasPrioritySupport: boolean;
+  hasCsvImport: boolean;
   price: number;
   badgeColor: string; // tailwind classes
 }
 
 export const PLANS: Record<PlanType, PlanConfig> = {
-  starter: {
-    name: 'Starter',
-    maxCustomers: 50,
+  free: {
+    name: 'Free',
+    maxRequestsPerMonth: 3,
     hasSequence: false,
     hasFeedback: false,
     hasAiInsights: false,
     hasSentimentFilter: false,
     hasMultiLocation: false,
     hasPrioritySupport: false,
-    price: 19,
+    hasCsvImport: false,
+    price: 0,
     badgeColor: 'bg-muted text-muted-foreground border-border/30',
+  },
+  starter: {
+    name: 'Starter',
+    maxRequestsPerMonth: 50,
+    hasSequence: false,
+    hasFeedback: false,
+    hasAiInsights: false,
+    hasSentimentFilter: false,
+    hasMultiLocation: false,
+    hasPrioritySupport: false,
+    hasCsvImport: false,
+    price: 1755,
+    badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
   },
   pro: {
     name: 'Pro',
-    maxCustomers: 500,
+    maxRequestsPerMonth: 500,
     hasSequence: true,
     hasFeedback: true,
     hasAiInsights: true,
     hasSentimentFilter: true,
     hasMultiLocation: false,
     hasPrioritySupport: false,
-    price: 49,
+    hasCsvImport: true,
+    price: 4527,
     badgeColor: 'bg-primary/15 text-primary border-primary/30',
   },
   agency: {
     name: 'Agency',
-    maxCustomers: null,
+    maxRequestsPerMonth: null,
     hasSequence: true,
     hasFeedback: true,
     hasAiInsights: true,
     hasSentimentFilter: true,
     hasMultiLocation: true,
     hasPrioritySupport: true,
-    price: 99,
+    hasCsvImport: true,
+    price: 9146,
     badgeColor: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
   },
 };
 
-export function canAddCustomer(plan: PlanType, currentCount: number): boolean {
+export function canSendRequest(plan: PlanType, monthlySentCount: number, requestedCount: number = 1): boolean {
   const config = PLANS[plan];
-  if (config.maxCustomers === null) return true;
-  return currentCount < config.maxCustomers;
+  if (config.maxRequestsPerMonth === null) return true;
+  return (monthlySentCount + requestedCount) <= config.maxRequestsPerMonth;
 }
 
-export function getCustomerLimit(plan: PlanType): number | null {
-  return PLANS[plan].maxCustomers;
+export function getRequestLimit(plan: PlanType): number | null {
+  return PLANS[plan].maxRequestsPerMonth;
 }

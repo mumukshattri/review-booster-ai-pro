@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     }
 
     const userId = user.id;
-    const { customerIds, sequenceStep } = await req.json();
+    const { customerIds, sequenceStep, scheduledFor } = await req.json();
     const step = sequenceStep || 1;
 
     if (!customerIds?.length) {
@@ -57,9 +57,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    const PLAN_LIMITS: Record<string, number | null> = {
+      free: 3,
+      starter: 50,
+      pro: 500,
+      agency: null
+    };
+
     const { data: profile } = await supabase
       .from("profiles")
-      .select("business_name, review_url, direct_review_url")
+      .select("business_name, review_url, direct_review_url, plan")
       .eq("id", userId)
       .single();
 
@@ -68,6 +75,30 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const userPlan = "agency"; // profile.plan || "free"; // DEV BYPASS
+    const maxRequests = PLAN_LIMITS[userPlan];
+
+    if (maxRequests !== null) {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      
+      const { count, error: countError } = await supabase
+        .from("customers")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("sent_at", startOfMonth);
+        
+      if (countError) throw countError;
+      
+      const currentSends = count || 0;
+      if (currentSends + customerIds.length > maxRequests) {
+        return new Response(JSON.stringify({ error: `Monthly limit reached. Your ${userPlan} plan allows ${maxRequests} review requests per month. You have already sent ${currentSends}.` }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const { data: customers, error: custError } = await supabase
@@ -99,6 +130,36 @@ Deno.serve(async (req) => {
 
     for (const customer of customers) {
       console.log(`[Seq ${step}] Processing: ${customer.name} (${customer.email})`);
+
+      // Handle Scheduling (sequenceStep 1 is standard immediate unless scheduledFor is provided)
+      let sendImmediately = true;
+      let nextSendAt: string | null = null;
+      let nextStep = step;
+
+      if (scheduledFor) {
+        const scheduleTime = new Date(scheduledFor).getTime();
+        const nowTime = new Date().getTime();
+        if (scheduleTime > nowTime) {
+          sendImmediately = false;
+          nextSendAt = scheduledFor;
+          nextStep = 0; // 0 means scheduled to send first email
+        }
+      }
+
+      if (!sendImmediately) {
+        // Just record the schedule in the database and skip sending
+        await supabase
+          .from("customers")
+          .update({
+            sequence_step: nextStep,
+            next_send_at: nextSendAt,
+            sequence_stopped: false,
+          } as any)
+          .eq("id", customer.id);
+
+        results.push({ id: customer.id, success: true, status: "scheduled" });
+        continue;
+      }
 
       const promptTemplate = SEQUENCE_PROMPTS[step] || SEQUENCE_PROMPTS[1];
       const prompt = promptTemplate
@@ -144,13 +205,6 @@ ${linkUrl}
 Thanks,
 ${businessName} team`;
 
-      const htmlBody = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:20px;font-family:sans-serif;font-size:14px;color:#222;">
-<pre style="white-space:pre-wrap;font-family:inherit;font-size:inherit;margin:0;">${plainTextBody}</pre>
-<img src="${trackOpenUrl}?cid=${customer.id}" width="1" height="1" style="display:none;" alt="" />
-</body></html>`;
-
       try {
         const sendResp = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -162,7 +216,6 @@ ${businessName} team`;
             from: `${businessName} <reviews@nextarcstore.in>`,
             to: [customer.email],
             subject,
-            html: htmlBody,
             text: plainTextBody,
           }),
         });

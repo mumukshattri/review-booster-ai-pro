@@ -20,6 +20,8 @@ export default function SettingsPage() {
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
   const [autoSendEnabled, setAutoSendEnabled] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [customersCount, setCustomersCount] = useState(0);
+  const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +41,10 @@ export default function SettingsPage() {
         setSubscriptionStatus(data.subscription_status || "trial");
         setAutoSendEnabled((data as any).auto_send_enabled || false);
         setLogoUrl((data as any).logo_url || null);
+        setPlanExpiresAt((data as any).plan_expires_at || null);
       }
+      const { count } = await supabase.from("customers").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+      setCustomersCount(count || 0);
     };
     load();
   }, []);
@@ -121,12 +126,10 @@ export default function SettingsPage() {
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
-                  autoSendEnabled ? "bg-primary/20" : "bg-secondary"
-                }`}>
-                  <Zap className={`w-6 h-6 transition-colors ${
-                    autoSendEnabled ? "text-primary" : "text-muted-foreground"
-                  }`} />
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${autoSendEnabled ? "bg-primary/20" : "bg-secondary"
+                  }`}>
+                  <Zap className={`w-6 h-6 transition-colors ${autoSendEnabled ? "text-primary" : "text-muted-foreground"
+                    }`} />
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-foreground">Auto-Send Sequence</h2>
@@ -134,14 +137,12 @@ export default function SettingsPage() {
                     Automatically send a 3-email review request sequence when a customer is added
                   </p>
                   <div className="flex items-center gap-2 mt-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      autoSendEnabled
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${autoSendEnabled
                         ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
                         : "bg-secondary text-muted-foreground border border-border/20"
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        autoSendEnabled ? "bg-emerald-400" : "bg-muted-foreground/50"
-                      }`} />
+                      }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${autoSendEnabled ? "bg-emerald-400" : "bg-muted-foreground/50"
+                        }`} />
                       {autoSendEnabled ? "Active" : "Disabled"}
                     </span>
                     {autoSendEnabled && (
@@ -234,69 +235,65 @@ export default function SettingsPage() {
             className="glass-card p-8 space-y-6"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">Your Plan</h2>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Billing & Plan</h2>
+                <p className="text-sm text-muted-foreground mt-1 tracking-wide">
+                  Manage your subscription and limits
+                </p>
+              </div>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${PLANS[plan].badgeColor}`}>
                 {plan === 'agency' && <Crown className="h-3 w-3" />}
-                {PLANS[plan].name}
+                {PLANS[plan].name} Plan
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {(Object.entries(PLANS) as [PlanType, typeof PLANS[PlanType]][]).map(([key, cfg]) => {
-                const isCurrent = key === plan;
-                return (
-                  <div
-                    key={key}
-                    className={`rounded-xl border p-5 space-y-3 transition-all ${
-                      isCurrent
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-border/20 bg-secondary/20 hover:border-border/40"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-foreground">{cfg.name}</h3>
-                      <span className="text-lg font-bold text-foreground">${cfg.price}<span className="text-xs text-muted-foreground font-normal">/mo</span></span>
-                    </div>
-                    <ul className="space-y-1.5 text-xs text-muted-foreground">
-                      <li className="flex items-center gap-1.5">
-                        <Check className="h-3 w-3 text-emerald-400" />
-                        {cfg.maxCustomers === null ? "Unlimited" : cfg.maxCustomers} customers
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <Check className={`h-3 w-3 ${cfg.hasSequence ? "text-emerald-400" : "text-muted-foreground/30"}`} />
-                        {cfg.hasSequence ? "3-email sequence" : "Single email only"}
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <Check className={`h-3 w-3 ${cfg.hasFeedback ? "text-emerald-400" : "text-muted-foreground/30"}`} />
-                        {cfg.hasFeedback ? "Feedback inbox" : "No feedback"}
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <Check className={`h-3 w-3 ${cfg.hasAiInsights ? "text-emerald-400" : "text-muted-foreground/30"}`} />
-                        {cfg.hasAiInsights ? "AI insights" : "Basic stats only"}
-                      </li>
-                      {cfg.hasPrioritySupport && (
-                        <li className="flex items-center gap-1.5">
-                          <Check className="h-3 w-3 text-emerald-400" />
-                          Priority support
-                        </li>
-                      )}
-                    </ul>
-                    {isCurrent ? (
-                      <Button variant="outline" size="sm" disabled className="w-full text-xs bg-secondary/50 border-border/30">
-                        Current Plan
-                      </Button>
-                    ) : (
-                      <Button variant="hero" size="sm" className="w-full text-xs btn-press">
-                        {key === 'starter' ? 'Downgrade' : 'Upgrade'}
-                      </Button>
-                    )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-secondary/30 border border-border/30 rounded-xl p-5 space-y-1">
+                <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Customer Usage</span>
+                <div className="text-2xl font-bold text-foreground mt-1">
+                  {customersCount} <span className="text-lg text-muted-foreground font-normal">/ {PLANS[plan].maxCustomers || 'Unlimited'}</span>
+                </div>
+              </div>
+              {plan !== "free" && (
+                <div className="bg-secondary/30 border border-border/30 rounded-xl p-5 space-y-1">
+                  <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Status & Renewal</span>
+                  <div className="text-lg font-bold text-foreground mt-1 capitalize">
+                    {subscriptionStatus === "active" ? (
+                      planExpiresAt ? `Renews on ${new Date(planExpiresAt).toLocaleDateString()}` : "Active Subscription"
+                    ) : subscriptionStatus === "cancelled" ? (
+                      planExpiresAt ? `Ends on ${new Date(planExpiresAt).toLocaleDateString()}` : "Cancelled"
+                    ) : subscriptionStatus}
                   </div>
-                );
-              })}
+                </div>
+              )}
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Subscription managed through Lemon Squeezy. Changes take effect immediately.
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                variant="hero"
+                className="btn-press flex-1"
+                onClick={async () => {
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user || !user.email) return;
+                  const checkoutUrl = `https://getreviewboost.lemonsqueezy.com/buy?checkout[email]=${encodeURIComponent(user.email)}`;
+                  window.location.href = checkoutUrl;
+                }}
+              >
+                Change or Upgrade Plan
+              </Button>
+              {plan !== "free" && subscriptionStatus !== "cancelled" && (
+                <Button
+                  variant="outline"
+                  className="bg-secondary/50 border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 btn-press flex-1"
+                  onClick={() => window.open('https://getreviewboost.lemonsqueezy.com/billing', '_blank')}
+                >
+                  Manage Billing / Cancel
+                </Button>
+              )}
+            </div>
+
+            <p className="text-xs text-muted-foreground pt-2">
+              Subscription securely managed by Lemon Squeezy.
             </p>
           </motion.div>
         </div>

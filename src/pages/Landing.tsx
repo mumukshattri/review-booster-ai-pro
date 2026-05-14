@@ -14,6 +14,7 @@ import { HeroStats } from "@/components/landing/HeroStats";
 import { LiveDemoSection } from "@/components/landing/LiveDemoSection";
 import { ROICalculator } from "@/components/landing/ROICalculator";
 import { useState } from "react";
+import { PaywallModal } from "@/components/PaywallModal";
 
 const steps = [
   {
@@ -60,6 +61,7 @@ const stepVariants = [
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const reducedMotion = useReducedMotion();
 
   const dur = reducedMotion ? 0.01 : 0.25;
@@ -67,6 +69,7 @@ export default function Landing() {
 
   return (
     <div className="dark min-h-screen bg-background text-foreground relative custom-cursor-area overflow-x-hidden">
+      <PaywallModal visible={showPaywall} onClose={() => setShowPaywall(false)} />
       <CustomCursor />
       <AnimatedBackground />
 
@@ -78,8 +81,8 @@ export default function Landing() {
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-3">
             <Link to="/login" className="nav-link-underline text-sm text-muted-foreground hover:text-foreground px-3 py-2 transition-colors">Log in</Link>
-            <Button variant="hero" className="btn-press" asChild>
-              <Link to="/signup">Start Free Trial</Link>
+            <Button variant="hero" className="btn-press" onClick={() => setShowPaywall(true)}>
+              Get Access
             </Button>
           </div>
 
@@ -97,8 +100,8 @@ export default function Landing() {
         <div className={`mobile-nav-drawer ${mobileMenuOpen ? "open" : ""}`}>
           <div className="container mx-auto px-4 py-6 space-y-4">
             <Link to="/login" className="block text-foreground text-base py-3 min-h-[44px]" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
-            <Button variant="hero" className="btn-press w-full min-h-[44px]" asChild>
-              <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Start Free Trial</Link>
+            <Button variant="hero" className="btn-press w-full min-h-[44px]" onClick={() => { setShowPaywall(true); setMobileMenuOpen(false); }}>
+              Get Access
             </Button>
           </div>
         </div>
@@ -153,11 +156,8 @@ export default function Landing() {
             transition={{ delay: 0.2, duration: dur * 2, ease }}
             className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-2"
           >
-            <Button variant="hero" size="lg" className="btn-press pulse-glow text-base px-8 py-6 min-h-[52px]" asChild>
-              <Link to="/signup">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+            <Button variant="hero" size="lg" className="btn-press pulse-glow text-base px-8 py-6 min-h-[52px]" onClick={() => setShowPaywall(true)}>
+              Get Access
             </Button>
             <Button variant="outline" size="lg" className="btn-press text-base px-8 py-6 bg-secondary/50 border-border/50 hover:bg-secondary min-h-[52px]"
               onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
@@ -325,11 +325,9 @@ export default function Landing() {
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black mb-4">Ready to boost your reviews?</h2>
             <p className="text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto text-sm sm:text-base">Join thousands of businesses already using ReviewBoost to grow their online reputation.</p>
-            <Button variant="hero" size="lg" className="btn-press pulse-glow text-base px-10 py-6 min-h-[52px]" asChild>
-              <Link to="/signup">
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+            <Button variant="hero" size="lg" className="btn-press pulse-glow text-base px-10 py-6 min-h-[52px]" onClick={() => setShowPaywall(true)}>
+              Get Access
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>
         </section>
